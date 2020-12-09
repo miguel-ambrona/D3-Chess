@@ -81,7 +81,7 @@ in **all** chess positions and is **efficient** enough to be used by chess serve
 minimal computational overhead.
 
 I tested the tool on a set of 5 million games from [lichess](https://lichess.org/) that
-where won on time by one of the players, identifying
+were won on time by one of the players, identifying
 [319 of them](https://github.com/miguel-ambrona/D3-Chess/blob/main/examples/unfair.txt)
 which were unfairly classified.
 One could argue that 319 out of 5M (roughly 1 every 15K) is not much, but
