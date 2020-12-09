@@ -1,7 +1,7 @@
 # D3-Chess
 
 Dead Draw Detector (D3) is an implementation of a decision procedure for checking whether
-there exists a sequence of legal moves that allows certain player checkmate their
+there exists a sequence of legal moves that allows certain player to checkmate their
 opponent in a given chess position.
 
 ## Why is this useful?
@@ -46,7 +46,7 @@ and **call it a victory** if the position is out of the scope of such a simple a
 For example [here](https://lichess.org/87JajHeg#99) White should not have won.
 Or [here](https://lichess.org/PIL4PUtT#87), Black should not have won on time
 after promoting to a queen (interestingly, any underpromotion would have been better).
-
+Had you ever seen a position where any underpromotion is better than queening!?
 
 ### Hard for machines
 
