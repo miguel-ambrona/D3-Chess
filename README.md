@@ -136,7 +136,7 @@ and it seemed to work quite nicely, especially after the further optimizations a
 
 ## Installation & Usage
 
-After cloning the respository, get Stockfish by running ```make get-stockfish```.
+After cloning the repository, get Stockfish by running ```make get-stockfish```.
 Then, run ```make``` to compile the tool.
 
 You can test our tool on a small number of
