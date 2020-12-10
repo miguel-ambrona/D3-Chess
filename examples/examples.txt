@@ -1,0 +1,11 @@
+5brk/4p1p1/3pP1P1/1B1P2p1/3p2p1/3P4/4K1P1/8 w - - 0 1 white
+Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - - 0 1 white
+Bb2kb2/bKp1p1p1/1pP1P1P1/1P6/p5P1/P7/8/8 b - - 0 1 white
+8/1p4p1/1Pp3p1/k1P3p1/1pP3Pb/1P4p1/6P1/7K w - - 0 1 white
+K1k5/P1Pp4/1p1P4/8/p7/P2P4/8/8 w - - 0 1 black
+8/8/5pk1/p6p/P1p2p1P/2P2P2/4K3/8 w - - 7 44
+1N5B/p5K1/P2p4/2pPk1p1/2P1p1P1/b3P1P1/2P5/8 b - - 0 1 black
+8/8/2k2N2/8/1K6/8/4N3/8 w - - 0 1 white
+8/1p6/pPp5/P1P5/8/4nkp1/6p1/6K1 b - - 1 71 QpptleSj
+8/1k6/1p1pB3/pPpP4/P1Pp1p1p/3PbP1P/6K1/8 w - - 48 85 jnsJhG8T
+2R5/8/1p6/kP6/p6p/P7/6KP/1R6 b - - 1 48 dZhy51vS
