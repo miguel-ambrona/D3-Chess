@@ -139,9 +139,7 @@ and it seemed to work quite nicely, especially after the further optimizations a
 After cloning the repository, get Stockfish by running ```make get-stockfish```.
 Then, run ```make``` to compile the tool.
 
-You can test our tool on a small number of
-[examples](https://github.com/miguel-ambrona/D3-Chess/blob/main/examples/examples.txt)
-by running ```./d3 test```.
+You can test our tool on a small number of by running ```./d3 test```.
 
 Otherwise, simply run ```./d3``` to start the tool.
 This will start a process which waits for commands from stdin.
