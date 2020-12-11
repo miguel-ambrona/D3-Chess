@@ -465,7 +465,7 @@ void D3Chess::loop(int argc, char* argv[]) {
 
   bool skipOutput = !showInfo && runningTests;
 
-  std::ifstream infile("examples/examples.txt");
+  std::ifstream infile("examples/lichess-30K-games.txt");
 
   int i = 0;
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
