@@ -1,7 +1,7 @@
 # D3-Chess
 
 Dead Draw Detector (D3) is an implementation of a decision procedure for checking whether
-there exists a sequence of legal moves that allows certain player to checkmate their
+there exists a sequence of legal moves that allows a certain player to checkmate their
 opponent in a given chess position.
 
 This tool uses [Stockfish](https://github.com/official-stockfish/Stockfish) as a back end
