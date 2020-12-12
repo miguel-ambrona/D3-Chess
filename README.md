@@ -30,7 +30,7 @@ by Andrew Buchanan, StrateGems 2002 that can be found
 [here](https://chess.stackexchange.com/questions/22555/is-the-dead-position-problem-solvable)).
 For example, consider the following positions:
 
-<img src="https://miguel-ambrona.github.io/img/draw-bishops.png" width="300px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://miguel-ambrona.github.io/img/bishop-vs-rook.png" width="300px">
+<img src="https://miguel-ambrona.github.io/img/draw-bishops-432.png" width="432px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://miguel-ambrona.github.io/img/bishop-vs-rook-432.png" width="432px">
 
 It is not hard to see that neither player can deliver checkmate in the left-hand side diagram,
 since the position is blocked and the bishops are not useful to make any progress.
