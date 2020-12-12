@@ -17,11 +17,6 @@
 #ifndef D3CHESS_H_INCLUDED
 #define D3CHESS_H_INCLUDED
 
-#include <map>
-#include <string>
-
-#include "types.h"
-
 class Position;
 
 namespace D3Chess {

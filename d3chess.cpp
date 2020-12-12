@@ -403,7 +403,7 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > 10000000)
+      if (search.get_total_counter() > 100000000)
         break;
     }
 

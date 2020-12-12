@@ -113,7 +113,7 @@ More precisely, we can store every visited position in a
 [table](https://en.wikipedia.org/wiki/Transposition_table) and every time we
 encounter a position that is already in the table, we can ignore it (not keep exploring
 the tree from it) since that search has already been done before.
-I thought this idea was so promising that is was worth being implemented.
+I thought this idea was so promising that it was worth being implemented.
 
 For example, in the left-hand side diagram from above, after moving the pieces in
 all possible ways, we can assure that at most 11 * 13 * 20 * 23 * 2 = 131560
