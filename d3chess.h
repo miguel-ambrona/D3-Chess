@@ -73,7 +73,8 @@ namespace D3Chess {
   }
 
   inline void Search::annotate_move(Move m){
-    checkmateSequence[depth] = m;
+    if (depth < MAX_VARIATION_LENGTH)
+      checkmateSequence[depth] = m;
   }
 
   inline void Search::interrupt() {
