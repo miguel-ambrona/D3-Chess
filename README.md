@@ -30,7 +30,7 @@ by Andrew Buchanan, StrateGems 2002 that can be found
 [here](https://chess.stackexchange.com/questions/22555/is-the-dead-position-problem-solvable)).
 For example, consider the following positions:
 
-<img src="https://miguel-ambrona.github.io/img/draw-bishops-432.png" width="350px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://miguel-ambrona.github.io/img/bishop-vs-rook-432.png" width="350px">
+<img src="https://miguel-ambrona.github.io/img/draw-bishops-432.png" width="325px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://miguel-ambrona.github.io/img/bishop-vs-rook-432.png" width="325px">
 
 It is not hard to see that neither player can deliver checkmate in the left-hand side diagram,
 since the position is blocked and the bishops are not useful to make any progress.
@@ -139,7 +139,7 @@ and it seemed to work quite nicely, especially after the further optimizations a
 After cloning the repository, get Stockfish by running ```make get-stockfish```.
 Then, run ```make``` to compile the tool.
 
-You can test our tool on a small number of by running ```./d3 test```.
+You can test our tool by running ```./d3 test```.
 
 Otherwise, simply run ```./d3``` to start the tool.
 This will start a process which waits for commands from stdin.
