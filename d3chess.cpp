@@ -344,8 +344,8 @@ namespace {
           !isWinnersTurn && king_safety(pos, loser) < kingSafety)
         variation = REWARD;
 
-      // Do not reward any variations while Loser has queen(s)
-      if (critical_material(winMaterial) && popcount(pos.pieces(loser, QUEEN)) > 0)
+      // Do not reward any variations while Loser has queen(s) if it is their turn
+      if (!isWinnersTurn && critical_material(winMaterial) && popcount(pos.pieces(loser, QUEEN)) > 0)
         variation = (variation = REWARD) ? NORMAL : variation;
 
       Depth newDepth = depth + 1;
