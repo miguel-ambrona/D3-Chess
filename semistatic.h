@@ -17,6 +17,59 @@
 #ifndef SEMISTATIC_H_INCLUDED
 #define SEMISTATIC_H_INCLUDED
 
+namespace SemiStatic {
+
+  constexpr int N_MOVE_VARS   = 49152;  // 2 * 6 * 64 * 64 (color * piece_type * from_sq * to_sq)
+  constexpr int N_PROM_VARS   = 128;    // 2 * 64 (color * from_sq)
+  constexpr int N_CLEAR_VARS  = 128;    // 2 * 64 (color * square)
+  constexpr int N_REACH_VARS  = 128;    // 2 * 64 (color * square)
+  constexpr int N_ATTACK_VARS = 128;    // 2 * 64 (color * targetted_sq)
+
+  // Equations for clear, reach and attack variables are handeled independently:
+
+  constexpr int N_EQS = 49280;  // N_MOVE_VARS + N_PROM_VARS
+  constexpr int N_VARS = 49664; // N_MOVE_VARS + 128 * 4
+
+  class System {
+  public:
+    System() = default;
+
+    void init();
+
+    int index(PieceType p, Color c, Square source, Square target) const;
+
+    // Data members
+    unsigned int equations[N_EQS][8]; // Each equation has at most 8 disjuncts.
+    bool variables[N_VARS];
+  };
+
+  inline int System::index(PieceType p, Color c, Square source, Square target) const {
+    return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | (int)target);
+  }
+
+  inline int color_square_index(Color c, Square s){
+    return (c << 6) | int(s);
+  }
+
+  inline int prom_index(Color c, Square s) {
+    return N_MOVE_VARS + color_square_index(c,s);
+  }
+
+  inline int clear_index(Color c, Square s) {
+    return N_MOVE_VARS + 128 + color_square_index(c,s);
+  }
+
+  inline int reach_index(Color c, Square s) {
+    return N_MOVE_VARS + 256 + color_square_index(c,s);
+  }
+
+  inline int attack_index(Color c, Square s) {
+    return N_MOVE_VARS + 384 + color_square_index(c,s);
+  }
+
+} // namespace SemiStatic
+
+
 // This file is designed to determine which pieces can move in a given chess position
 // and the squares they can go to. The analysis is static in the sense that it is performed
 // based solely on the current position of the pieces. However, it may allow to conclude that a
@@ -26,7 +79,7 @@
 // This analysis is particularly useful for identifying "blocked" positions.
 //
 // DISCLAIMER:
-//   We require this analysis be SOUND in the sense that negative statements are correct, e.g.
+//   We require that this analysis be SOUND in the sense that negative statements are correct, e.g.
 //   if it is concluded that "the piece on e3 CANNOT go to a2", this is really the case.
 //   On the other hand, our algorithm may NOT be COMPLETE: it may not identify all impossiblities.
 //   For example, even if it is concluded that "the piece on e3 CAN potentially go to a2", it may
@@ -65,7 +118,7 @@
 //
 // Reach variables are useful to model pawn captures, for instance, if there is a white pawn on c4:
 //
-//   X(c4->a7) => Clear(a7,white) /\ { X(c4->*8) \/ X(c4->a6} \/ { X(c4->b6) /\ Reach(a7,black) } }.
+//   X(c4->a7) => Clear(a7,white) /\ { X(c4->*8) \/ X(c4->a6) \/ { X(c4->b6) /\ Reach(a7,black) } }.
 //
 // In order to understand how we implement and solve the above system (although our actual
 // implementation may differ slighly from this model, for the sake of performance) think of the
@@ -74,17 +127,15 @@
 // of implications) using two different types of arrows: MUST-arrows and OPT-arrows.
 // Following the above example, implication #1 would lead to arrows:
 //
-//                                  X(e3->b4)
-//                                      |
-//                                     OPT
-//                                      |
-//                                      v
-//    Clear(a7,white)  ---MUST--->  X(e3->a2)  <---OPT--- X(e3->c3)
-//                                      ^
-//                                      |
-//                                     OPT
-//                                      |
-//                                  X(e3->c1)
+//                           X(e3->b4)
+//                               |
+//                           OPT |
+//                    MUST       v       OPT
+//    Clear(a7,white) ---->  X(e3->a2)  <---- X(e3->c3)
+//                               ^
+//                           OPT |
+//                               |
+//                           X(e3->c1)
 //
 // (Note that there will be more arrows pointing to the above nodes, the above only capture #1.)
 // Also observe how the direction of the arrows is "reversed" from the direction of the implication.
@@ -102,9 +153,5 @@
 // If the graph has been built considering all move-predecessor implications, we can be certain that
 // if X(s->t) is not highlighted in the saturated graph, it is impossible for the piece on
 // square 's' to reach square 't'.
-
-namespace SemiStatic {
-
-} // namespace SemiStatic
 
 #endif // #ifndef SEMISTATIC_H_INCLUDED
