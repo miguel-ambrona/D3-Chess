@@ -37,7 +37,10 @@ namespace SemiStatic {
     void init();
 
     int index(PieceType p, Color c, Square source, Square target) const;
+    void solve(Position& pos);
+    void king_region(Position& pos, Color c);
 
+  private:
     // Data members
     unsigned int equations[N_EQS][8]; // Each equation has at most 8 disjuncts.
     bool variables[N_VARS];
@@ -107,7 +110,8 @@ namespace SemiStatic {
 //
 // These variables are modeled by the implications:
 //
-//   Clear(s,c) => \/_{aux : aux != s} X(s->aux)    (if there is c-colored piece at 's')
+//   Clear(s,c) => \/_{aux : aux != s} X(s->aux)                 (If there is c-colored piece at 's'.)
+//                 \/_{aux : ~c-colored piece at aux} X(aux->s)
 //
 //   Reach(s,c) => \/_{aux : non-king c-colored piece at aux} X(aux->s)
 //

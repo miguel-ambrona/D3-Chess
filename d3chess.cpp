@@ -207,7 +207,7 @@ namespace {
 
   bool need_loser_promotion(Position& pos, Color winner){
 
-    Bitboard minorPieces = pos.pieces(KNIGHT) | pos.pieces(BISHOP);
+    Bitboard minorPieces = pos.pieces(KNIGHT, BISHOP);// | pos.pieces(BISHOP);
 
     // Winner has just a knight and Loser only has pawns and/or queen(s)
     if (popcount(pos.pieces(winner)) == 2 && pos.count<KNIGHT>(winner) == 1
@@ -359,7 +359,7 @@ namespace {
       else if (variation == PUNISH)
         newDepth = std::min(search.max_depth(), newDepth + 2);
 
-      // If not rewarded nor punish, but the previous player made some progress, reward this
+      // If not rewarded nor punished, but the previous player made some progress, reward this
       else if (pastProgress && little_material(winMaterial))
         newDepth--;
 
@@ -381,7 +381,7 @@ namespace {
   // This function returns 'true' if it is impossible for intendedWinner to deliver checkmate
   // in the given position.
   // Use 'showInfo' to print extra information on the screen, e.g. the mating sequence when found.
-  // Use 'skipOutput' will not print anything (useful when running many tests).
+  // Use 'skipOutput' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
   bool is_unwinnable(Position& pos, Color intendedWinner, bool showInfo, bool skipOutput, bool allowTricks) {

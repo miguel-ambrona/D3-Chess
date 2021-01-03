@@ -17,7 +17,7 @@
 #ifndef D3CHESS_H_INCLUDED
 #define D3CHESS_H_INCLUDED
 
-class Position;
+//class Position;
 
 namespace D3Chess {
 
