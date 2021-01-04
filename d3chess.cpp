@@ -20,20 +20,22 @@
 #include "timeman.h"
 #include "tt.h"
 #include "uci.h"
+#include "semistatic.h"
 #include "d3chess.h"
-
 
 void D3Chess::Search::init(){
   totalCounter = 0;
 }
 
-void D3Chess::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks){
+void D3Chess::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis){
 
   winner = intendedWinner;
   depth = 0;
   maxSearchDepth = maxDepth;
   interrupted = false;
+  unwinnable = false;
   tricks = allowTricks;
+  quick = quickAnalysis;
   totalCounter += counter;
   counter = 0;
 }
@@ -45,7 +47,7 @@ void D3Chess::Search::print_result(int mate, bool showMate) const {
   if (mate >= 0)
     std::cout << "Found checkmate in " << mate << " plies" ;
 
-  else if (!interrupted)
+  else if (!interrupted || unwinnable)
     std::cout << "Checkmate is impossible";
 
   else
@@ -267,16 +269,17 @@ namespace {
     Color loser = ~winner;
 
     // To store an entry from the transposition table (TT)
-    TTEntry* tte;
+    TTEntry* tte = nullptr;
     bool found;
     Depth movesLeft = search.max_depth() - depth;
 
-    // Look for the position in the TT
-    tte = TT.probe(pos.key(), found);
-
-    // If found in TT with more depth, we can safetly ignore this branch
-    if (found && (tte->depth() >= movesLeft))
-      return -1;
+    if (!search.quick_search())
+    {
+      // If the position is found in TT with more depth, we can safetly ignore this branch
+      tte = TT.probe(pos.key(), found);
+      if (found && (tte->depth() >= movesLeft))
+        return -1;
+    }
 
     // Insufficient material to win
     if (impossible_to_win(pos, winner))
@@ -287,16 +290,16 @@ namespace {
       return 0;
 
     // Search limits
-    if (depth >= search.max_depth() || search.get_counter() > search.max_depth() * 1000000)
+    int counterLimit = search.max_depth() * (search.quick_search() ? 1000 : 1000000);
+    if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
       return -1;
     }
 
     // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
-    if (!found || (tte->depth() < movesLeft)){
+    if (!search.quick_search())
       tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE, VALUE_NONE);
-    }
 
     Score kingSafety = king_safety(pos, loser);
 
@@ -384,18 +387,24 @@ namespace {
   // Use 'skipOutput' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
-  bool is_unwinnable(Position& pos, Color intendedWinner, bool showInfo, bool skipOutput, bool allowTricks) {
+  bool is_unwinnable(Position& pos, SemiStatic::System& system, Color intendedWinner, int parameters) {
 
     int mate;
     D3Chess::Search search = D3Chess::Search();
     search.init();
 
-    TT.clear();
+    bool showInfo = parameters & 1;
+    bool skipOutput = parameters & 2;
+    bool allowTricks = parameters & 4;
+    bool quickAnalysis = parameters & 8;
+
+    if (!quickAnalysis)
+      TT.clear();
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
+    for (int maxDepth = 2; maxDepth <= (quickAnalysis ? 5 : 1000); maxDepth++){
 
-      search.set(intendedWinner, maxDepth, allowTricks);
+      search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
       mate = find_mate(pos, 0, search, false);
 
       // If the search was finished, but not interrupted, it is because victory is impossible
@@ -403,14 +412,22 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > 100000000)
+      if (search.get_total_counter() > (quickAnalysis ? 100000 : 100000000))
         break;
+    }
+
+    // If the position has not been resolved (no mate was found, but also not proven unwinnable)
+    if (mate < 0 && search.is_interrupted())
+    {
+      system.saturate(pos);
+      if (system.is_unwinnable(pos, intendedWinner))
+        search.set_unwinnable();
     }
 
     if (!skipOutput)
       search.print_result(mate, showInfo);
 
-    return mate < 0 && !search.is_interrupted();
+    return (mate < 0 && !search.is_interrupted()) || search.is_unwinnable();
   }
 
   // We expect input commands to be a line of text containing a FEN followed by the intended winner
@@ -451,6 +468,10 @@ void D3Chess::loop(int argc, char* argv[]) {
   bool showInfo = false;
   bool runningTests = false;
   bool allowTricks = true;
+  bool quickAnalysis = false;
+
+  SemiStatic::System system = SemiStatic::System();
+  system.init();
 
   for (int i = 1; i < argc; ++i){
     if (std::string(argv[i]) == "--show-info")
@@ -461,6 +482,9 @@ void D3Chess::loop(int argc, char* argv[]) {
 
     if (std::string(argv[i]) == "-min")
       allowTricks = false;
+
+    if (std::string(argv[i]) == "-quick")
+      quickAnalysis = true;
   }
 
   bool skipOutput = !showInfo && runningTests;
@@ -478,9 +502,10 @@ void D3Chess::loop(int argc, char* argv[]) {
       std::cout << i << std::endl;
 
     Color intendedWinner = parse_line(pos, &states->back(), line);
+    int parameters = showInfo + (skipOutput << 1) + (allowTricks << 2) + (quickAnalysis << 3);
 
-    if (is_unwinnable(pos, intendedWinner, showInfo, skipOutput, allowTricks) && runningTests)
-      std::cout << "Unwinnable: " << line << std::endl;
+    if (is_unwinnable(pos, system, intendedWinner, parameters) && runningTests)
+      std::cout << "Unwinnable: " << line << pos << std::endl;
 
     else if (showInfo && runningTests)
       std::cout << line << std::endl;

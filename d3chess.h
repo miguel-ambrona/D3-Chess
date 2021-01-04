@@ -30,7 +30,7 @@ namespace D3Chess {
     Search() = default;
 
     void init();
-    void set(Color intendedWinner, Depth maxDepth, bool allowTricks);
+    void set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis);
 
     Color intended_winner() const;
     Depth actual_depth() const;
@@ -38,11 +38,14 @@ namespace D3Chess {
 
     void annotate_move(Move m);
     void interrupt();
+    void set_unwinnable();
     void step();
     void undo_step();
 
     bool tricks_allowed() const;
+    bool quick_search() const;
     bool is_interrupted() const;
+    bool is_unwinnable() const;
     int get_counter() const;
     int get_total_counter() const;
 
@@ -55,7 +58,9 @@ namespace D3Chess {
     Depth depth;
     Depth maxSearchDepth;
     bool interrupted;
+    bool unwinnable;
     bool tricks;
+    bool quick;
     uint64_t counter;
     uint64_t totalCounter;
   };
@@ -81,6 +86,10 @@ namespace D3Chess {
     interrupted = true;
   }
 
+  inline void Search::set_unwinnable() {
+    unwinnable = true;
+  }
+
   inline void Search::step() {
     counter++;
     depth++;
@@ -94,8 +103,16 @@ namespace D3Chess {
     return tricks;
   }
 
+  inline bool Search::quick_search() const {
+    return quick;
+  }
+
   inline bool Search::is_interrupted() const {
     return interrupted;
+  }
+
+  inline bool Search::is_unwinnable() const {
+    return unwinnable;
   }
 
   inline int Search::get_counter() const {

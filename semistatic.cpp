@@ -16,7 +16,7 @@
 
 #include "uci.h"
 #include "semistatic.h"
-#include "timeman.h"
+#include "position.h"
 
 constexpr int NONE = 128;  // High enough to go outside of the board
 
@@ -74,9 +74,12 @@ void SemiStatic::System::init() {
         }
 }
 
-void SemiStatic::System::solve(Position& pos) {
+void SemiStatic::System::saturate(Position& pos) {
 
   // Initialize the variables
+
+  for (int j = 0; j < N_MOVE_VARS; ++j)
+    variables[j] = false;
 
   for (int j = 0; j < 4*128; ++j)
     variables[N_MOVE_VARS + j] = false;
@@ -155,7 +158,7 @@ void SemiStatic::System::solve(Position& pos) {
           bool target_attacked = false;
           Bitboard attackers = pos.attackers_to(target) & pos.pieces(~c);
           for (int sq = 0; sq < 64; ++sq)
-            if ((attackers & ((Bitboard)1 << sq)) && !variables[clear_index(~c,(Square)sq)])
+            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,(Square)sq)])
             {
               target_attacked = true;
               break;
@@ -210,17 +213,108 @@ void SemiStatic::System::solve(Position& pos) {
   } // end while
 }
 
-void SemiStatic::System::king_region(Position& pos, Color c) {
-  solve(pos);
-  Square s;
-  for (s = SQ_A1; s <= SQ_H8; ++s)
-  {
-    Piece pc = pos.piece_on(s);
-    if (type_of(pc) == KING && color_of(pc) == c)
-      break;
-  }
+Square king_square(Position& pos, Color c) {
 
+  Square s;
+  Bitboard king = pos.pieces(c, KING);
+  for (s = SQ_A1; s <= SQ_H8; ++s)
+    if (king & (1ULL << s))
+      break;
+  return s;
+}
+
+Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
+
+  Bitboard region = 0;
+  Square s = king_square(pos, c);
   for (Square t = SQ_A1; t <= SQ_H8; ++t)
     if (variables[index(KING,c,s,t)])
-      std::cout << t << " ";
+      region |= (1ULL << t);
+
+  return region;
+}
+
+// Returns the position of the pieces of color c that can visit the region.
+
+Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
+
+  Bitboard visitors = 0;
+  for (Square s = SQ_A1; s <= SQ_H8; ++s)
+    for (Square t = SQ_A1; t <= SQ_H8; ++t)
+    {
+      Piece pc = pos.piece_on(s);
+      PieceType p = type_of(pc);
+      if (p == NO_PIECE_TYPE)
+        continue;
+
+      Color color = color_of(pc);
+      if (color == c && ((1ULL << t) & region) && variables[index(p,c,s,t)])
+        visitors |= (1ULL << s);
+    }
+  return visitors;
+}
+
+bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
+
+  Bitboard loserKingRegion = king_region(pos, ~intendedWinner);
+  Bitboard visitors = SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner);
+
+  // If there are no visitors, the position is unwinnable
+  if (!visitors)
+    return true;
+
+  // If there are visitors of both square colors, declare the position as potentially winnable
+  if ((visitors & DarkSquares) && (visitors & ~DarkSquares))
+    return false;
+
+  // If there are visitors other than bishops, declare the position as potentially winnable
+  for (Square s = SQ_A1; s <= SQ_H8; ++s)
+    if (1ULL << s & visitors && type_of(pos.piece_on(s)) != BISHOP)
+      return false;
+
+  Bitboard visitorsSquareColor = (visitors & DarkSquares) ? DarkSquares : ~DarkSquares;
+
+  // The position is unwinnable if loser has not enough blockers for the escaping squares
+  Bitboard blockers = SemiStatic::System::visitors(pos, loserKingRegion, ~intendedWinner);
+  Bitboard actualBlockers = blockers & ~visitorsSquareColor & ~pos.pieces(KING);
+
+  for (Square s = SQ_A1; s <= SQ_H8; ++s)
+  {
+    // Check that at least a visitor can go to s and s is in the mating region
+    Bitboard matingBishops = SemiStatic::System::visitors(pos, square_bb(s), intendedWinner);
+    if (!matingBishops || !(loserKingRegion & s))
+      continue;
+
+    Bitboard escapingSquares = 0;
+    Bitboard checkingSquares = 0;
+    for (Square t = SQ_A1; t <= SQ_H8; ++t)
+      if (distance<Square>(s,t) == 1 && (loserKingRegion & (1ULL << t)))
+      {
+        if (~visitorsSquareColor & (1ULL << t))
+          escapingSquares |= t;
+
+        else
+          checkingSquares |= t;
+      }
+
+    // If there are two mating diagonals pointing to s, Winner must have at least two
+    // bishops in the region or Loser's king will have at least an escaping square
+    bool twoDiagonals = checkingSquares & ((checkingSquares >> 2) | (checkingSquares >> 16));
+    if (twoDiagonals && popcount(matingBishops) < 2)
+      continue;
+
+    // If there are as many blockers as escaping squares, the position may be winnable
+    int blockersCnt = 0;
+    for (Square blocker = SQ_A1; blocker <= SQ_H8; ++blocker)
+      if ((actualBlockers & blocker) && (SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner)))
+        blockersCnt++;
+
+    if (popcount(escapingSquares) <= blockersCnt)
+      return false;
+  }
+
+  // If we made it so far it is because the winner's single-colored bishops cannot mate since
+  // all squares in the loser king region admit at least an opposite color escaping square
+
+  return true;
 }
