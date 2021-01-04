@@ -17,6 +17,21 @@
 #ifndef SEMISTATIC_H_INCLUDED
 #define SEMISTATIC_H_INCLUDED
 
+// This file is designed to determine which pieces can move in a given chess position
+// and the squares they can go to. The analysis is static in the sense that it is performed
+// based solely on the current position of the pieces. However, it may allow to conclude that a
+// certain piece can potentially go to a certain square, even if all the paths to the target are
+// currently blocked in some way. Or that a piece can NEVER reach a certain square, not matter how
+// the pieces are moved. Consequently, we coin this analysis "semi-static".
+// This analysis is particularly useful for identifying "blocked" positions.
+//
+// DISCLAIMER:
+//   We require that this analysis be SOUND in the sense that negative statements are correct, e.g.
+//   if it is concluded that "the piece on e3 CANNOT go to a2", this is really the case.
+//   On the other hand, our algorithm may NOT be COMPLETE: it may not identify all impossiblities.
+//   For example, even if it is concluded that "the piece on e3 CAN potentially go to a2", it may
+//   actually be impossible to reach a2 from e3, given the dynamic characteristics of the position.
+
 namespace SemiStatic {
 
   constexpr int N_MOVE_VARS   = 49152;  // 2 * 6 * 64 * 64 (color * piece_type * from_sq * to_sq)
@@ -80,21 +95,6 @@ namespace SemiStatic {
 } // namespace SemiStatic
 
 
-// This file is designed to determine which pieces can move in a given chess position
-// and the squares they can go to. The analysis is static in the sense that it is performed
-// based solely on the current position of the pieces. However, it may allow to conclude that a
-// certain piece can potentially go to a certain square, even if all the paths to the target are
-// currently blocked in some way. Or that a piece can NEVER reach a certain square, not matter how
-// the pieces are moved. Consequently, we coin this analysis "semi-static".
-// This analysis is particularly useful for identifying "blocked" positions.
-//
-// DISCLAIMER:
-//   We require that this analysis be SOUND in the sense that negative statements are correct, e.g.
-//   if it is concluded that "the piece on e3 CANNOT go to a2", this is really the case.
-//   On the other hand, our algorithm may NOT be COMPLETE: it may not identify all impossiblities.
-//   For example, even if it is concluded that "the piece on e3 CAN potentially go to a2", it may
-//   actually be impossible to reach a2 from e3, given the dynamic characteristics of the position.
-//
 // The main idea behind this analysis is to build and solve a system of equations over Boolean
 // variables of the form X(s->t) for a given source square 's' and a target square 't'.
 // For example, X(e3->a2) will take value 1 if the piece currently on e3 can potentially

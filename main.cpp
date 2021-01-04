@@ -16,8 +16,8 @@
 
 #include "thread.h"
 #include "uci.h"
-#include "d3chess.h"
 #include "semistatic.h"
+#include "dynamic.h"
 
 int main(int argc, char* argv[]) {
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
   Threads.set(size_t(Options["Threads"]));
 
-  D3Chess::loop(argc, argv);
+  CHA::loop(argc, argv);
 
   Threads.set(0);
   return 0;

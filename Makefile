@@ -12,18 +12,18 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 #  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 
-d3:
+cha:
 	cp main.cpp Stockfish/src/
 	cp semistatic.* Stockfish/src/
-	cp d3chess.* Stockfish/src/
+	cp dynamic.* Stockfish/src/
 	cd Stockfish/src && make build -j ARCH=x86-64
-	cp Stockfish/src/stockfish ./d3
+	cp Stockfish/src/stockfish ./cha
 
 get-stockfish:
 	git clone https://github.com/official-stockfish/Stockfish.git
-	sed -ie '/^OBJS/i SRCS += d3chess.cpp semistatic.cpp' Stockfish/src/Makefile
+	sed -ie '/^OBJS/i SRCS += dynamic.cpp semistatic.cpp' Stockfish/src/Makefile
 
-.PHONY: d3 clean
+.PHONY: cha clean
 
 clean:
-	rm ./d3
+	rm ./cha

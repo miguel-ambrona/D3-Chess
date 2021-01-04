@@ -18,4 +18,4 @@ jobs:
     - name: make
       run: make
     - name: test
-      run: ./d3 test -quick
+      run: ./cha test -quick

@@ -14,12 +14,12 @@
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
 
-#ifndef D3CHESS_H_INCLUDED
-#define D3CHESS_H_INCLUDED
+#ifndef CHA_H_INCLUDED
+#define CHA_H_INCLUDED
 
 //class Position;
 
-namespace D3Chess {
+namespace CHA {
 
   constexpr int MAX_VARIATION_LENGTH = 2000;
 
@@ -125,6 +125,6 @@ namespace D3Chess {
 
   void loop(int argc, char* argv[]);
 
-} // namespace D3Chess
+} // namespace CHA
 
-#endif // #ifndef D3CHESS_H_INCLUDED
+#endif // #ifndef CHA_H_INCLUDED

@@ -21,13 +21,13 @@
 #include "tt.h"
 #include "uci.h"
 #include "semistatic.h"
-#include "d3chess.h"
+#include "dynamic.h"
 
-void D3Chess::Search::init(){
+void CHA::Search::init(){
   totalCounter = 0;
 }
 
-void D3Chess::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis){
+void CHA::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis){
 
   winner = intendedWinner;
   depth = 0;
@@ -40,7 +40,7 @@ void D3Chess::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks
   counter = 0;
 }
 
-void D3Chess::Search::print_result(int mate, bool showMate) const {
+void CHA::Search::print_result(int mate, bool showMate) const {
 
   // This function should only be called when the search has been completed
 
@@ -55,11 +55,12 @@ void D3Chess::Search::print_result(int mate, bool showMate) const {
 
   std::cout << " (Total positions searched: " << (totalCounter + counter) << ")";
 
-  if (showMate)
+  if (showMate && mate >= 0)
   {
-    std::cout << "@";
+    std::cout << ". Helpmating line:";
     for (int i = 0; i < std::min(mate, MAX_VARIATION_LENGTH); i++)
-      std::cout << UCI::move(checkmateSequence[i], false) << " ";
+      std::cout << " " << UCI::move(checkmateSequence[i], false);
+    std::cout << "# ";
   }
 }
 
@@ -84,6 +85,7 @@ namespace KnightDistance {
   }
 
   int knight_distance(Square x, Square y){
+
     std::pair<int, int> idx = std::minmax(distance<File>(x, y), distance<Rank>(x, y));
 
     // Handle the exceptional cases
@@ -263,7 +265,7 @@ namespace {
   // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
   // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
 
-  int find_mate(Position& pos, Depth depth, D3Chess::Search& search, bool pastProgress){
+  int find_mate(Position& pos, Depth depth, CHA::Search& search, bool pastProgress){
 
     Color winner = search.intended_winner();
     Color loser = ~winner;
@@ -390,7 +392,7 @@ namespace {
   bool is_unwinnable(Position& pos, Color intendedWinner, int parameters) {
 
     int mate;
-    D3Chess::Search search = D3Chess::Search();
+    static CHA::Search search = CHA::Search();
     search.init();
 
     bool showInfo = parameters & 1;
@@ -399,7 +401,16 @@ namespace {
     bool quickAnalysis = parameters & 8;
 
     if (!quickAnalysis)
+    {
+      if (SemiStatic::is_unwinnable(pos, intendedWinner))
+      {
+        search.set_unwinnable();
+        if (!skipOutput)
+          search.print_result(-1, showInfo);
+        return true;
+      }
       TT.clear();
+    }
 
     // Trivial progress: as long as there is only one legal move, make that move
     StateInfo st;
@@ -465,9 +476,9 @@ namespace {
 } // namespace
 
 
-/// D3Chess::loop() waits for a command from stdin or the tests file and analyzes it.
+/// CHA::loop() waits for a command from stdin or the tests file and analyzes it.
 
-void D3Chess::loop(int argc, char* argv[]) {
+void CHA::loop(int argc, char* argv[]) {
 
   KnightDistance::init();
   Position pos;
