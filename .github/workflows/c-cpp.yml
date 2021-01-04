@@ -14,8 +14,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make get-stockfish
+      working-directory: ./src
       run: make get-stockfish
     - name: make
+      working-directory: ./src
       run: make
     - name: test
+      working-directory: ./src
       run: ./cha test -quick
