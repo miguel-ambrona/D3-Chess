@@ -72,6 +72,11 @@ namespace SemiStatic {
     return N_MOVE_VARS + 384 + color_square_index(c,s);
   }
 
+  void init();
+
+  bool is_unwinnable(Position& pos, Color intendedWinner);
+  bool is_unwinnable_after_one_move(Position& pos, Color intendedWinner);
+
 } // namespace SemiStatic
 
 

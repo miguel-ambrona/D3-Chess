@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
   Bitboards::init();
   Position::init();
   Bitbases::init();
+  SemiStatic::init();
 
   Threads.set(size_t(Options["Threads"]));
 

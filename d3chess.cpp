@@ -387,7 +387,7 @@ namespace {
   // Use 'skipOutput' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
-  bool is_unwinnable(Position& pos, SemiStatic::System& system, Color intendedWinner, int parameters) {
+  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters) {
 
     int mate;
     D3Chess::Search search = D3Chess::Search();
@@ -400,6 +400,12 @@ namespace {
 
     if (!quickAnalysis)
       TT.clear();
+
+    // Trivial progress: as long as there is only one legal move, make that move
+    StateInfo st;
+    while (MoveList<LEGAL>(pos).size() == 1)
+      for (const auto& m : MoveList<LEGAL>(pos))
+        pos.do_move(m, st);
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
     for (int maxDepth = 2; maxDepth <= (quickAnalysis ? 5 : 1000); maxDepth++){
@@ -419,8 +425,10 @@ namespace {
     // If the position has not been resolved (no mate was found, but also not proven unwinnable)
     if (mate < 0 && search.is_interrupted())
     {
-      system.saturate(pos);
-      if (system.is_unwinnable(pos, intendedWinner))
+      if (SemiStatic::is_unwinnable(pos, intendedWinner))
+        search.set_unwinnable();
+
+      else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
         search.set_unwinnable();
     }
 
@@ -470,9 +478,6 @@ void D3Chess::loop(int argc, char* argv[]) {
   bool allowTricks = true;
   bool quickAnalysis = false;
 
-  SemiStatic::System system = SemiStatic::System();
-  system.init();
-
   for (int i = 1; i < argc; ++i){
     if (std::string(argv[i]) == "--show-info")
       showInfo = true;
@@ -489,6 +494,10 @@ void D3Chess::loop(int argc, char* argv[]) {
 
   bool skipOutput = !showInfo && runningTests;
 
+  // If searching for the minimum helpmate, disable 'quickAnalysis'
+  if (!allowTricks)
+    quickAnalysis = false;
+
   std::ifstream infile("examples/lichess-30K-games.txt");
 
   int i = 0;
@@ -504,7 +513,7 @@ void D3Chess::loop(int argc, char* argv[]) {
     Color intendedWinner = parse_line(pos, &states->back(), line);
     int parameters = showInfo + (skipOutput << 1) + (allowTricks << 2) + (quickAnalysis << 3);
 
-    if (is_unwinnable(pos, system, intendedWinner, parameters) && runningTests)
+    if (is_unwinnable(pos, intendedWinner, parameters) && runningTests)
       std::cout << "Unwinnable: " << line << pos << std::endl;
 
     else if (showInfo && runningTests)

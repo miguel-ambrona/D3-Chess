@@ -14,9 +14,9 @@
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
 
+#include "timeman.h"
 #include "uci.h"
 #include "semistatic.h"
-#include "position.h"
 
 constexpr int NONE = 128;  // High enough to go outside of the board
 
@@ -158,7 +158,7 @@ void SemiStatic::System::saturate(Position& pos) {
           bool target_attacked = false;
           Bitboard attackers = pos.attackers_to(target) & pos.pieces(~c);
           for (int sq = 0; sq < 64; ++sq)
-            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,(Square)sq)])
+            if ((attackers & sq) && !variables[clear_index(~c,(Square)sq)])
             {
               target_attacked = true;
               break;
@@ -213,12 +213,12 @@ void SemiStatic::System::saturate(Position& pos) {
   } // end while
 }
 
-Square king_square(Position& pos, Color c) {
+Square find_king(Position& pos, Color c) {
 
   Square s;
   Bitboard king = pos.pieces(c, KING);
   for (s = SQ_A1; s <= SQ_H8; ++s)
-    if (king & (1ULL << s))
+    if (king & s)
       break;
   return s;
 }
@@ -226,10 +226,10 @@ Square king_square(Position& pos, Color c) {
 Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
 
   Bitboard region = 0;
-  Square s = king_square(pos, c);
+  Square s = find_king(pos, c);
   for (Square t = SQ_A1; t <= SQ_H8; ++t)
     if (variables[index(KING,c,s,t)])
-      region |= (1ULL << t);
+      region |= t;
 
   return region;
 }
@@ -248,8 +248,8 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
         continue;
 
       Color color = color_of(pc);
-      if (color == c && ((1ULL << t) & region) && variables[index(p,c,s,t)])
-        visitors |= (1ULL << s);
+      if (color == c && (region & t) && variables[index(p,c,s,t)])
+        visitors |= s;
     }
   return visitors;
 }
@@ -269,7 +269,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
   // If there are visitors other than bishops, declare the position as potentially winnable
   for (Square s = SQ_A1; s <= SQ_H8; ++s)
-    if (1ULL << s & visitors && type_of(pos.piece_on(s)) != BISHOP)
+    if ((visitors & s) && type_of(pos.piece_on(s)) != BISHOP)
       return false;
 
   Bitboard visitorsSquareColor = (visitors & DarkSquares) ? DarkSquares : ~DarkSquares;
@@ -288,9 +288,9 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     Bitboard escapingSquares = 0;
     Bitboard checkingSquares = 0;
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
-      if (distance<Square>(s,t) == 1 && (loserKingRegion & (1ULL << t)))
+      if (distance<Square>(s,t) == 1 && (loserKingRegion & t))
       {
-        if (~visitorsSquareColor & (1ULL << t))
+        if (~visitorsSquareColor & t)
           escapingSquares |= t;
 
         else
@@ -306,7 +306,8 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     // If there are as many blockers as escaping squares, the position may be winnable
     int blockersCnt = 0;
     for (Square blocker = SQ_A1; blocker <= SQ_H8; ++blocker)
-      if ((actualBlockers & blocker) && (SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner)))
+      if ((actualBlockers & blocker) &&
+          (SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner)))
         blockersCnt++;
 
     if (popcount(escapingSquares) <= blockersCnt)
@@ -316,5 +317,35 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
   // If we made it so far it is because the winner's single-colored bishops cannot mate since
   // all squares in the loser king region admit at least an opposite color escaping square
 
+  return true;
+}
+
+// Our global SemiStatic System variable
+static SemiStatic::System SYSTEM = SemiStatic::System();
+
+// Init fills the equations relative to Movement variables (must be executed once)
+
+void SemiStatic::init() {
+  SYSTEM.init();
+}
+
+// Check if the position is semistatically unwinnable
+
+bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner) {
+  SYSTEM.saturate(pos);
+  return SYSTEM.is_unwinnable(pos, intendedWinner);
+}
+
+// Check if the possition if after the first move, the possition is semistatically unwinnable
+
+bool SemiStatic::is_unwinnable_after_one_move(Position& pos, Color intendedWinner) {
+  StateInfo st;
+  for (const auto& m : MoveList<LEGAL>(pos))
+  {
+    pos.do_move(m,st);
+    if (!is_unwinnable(pos, intendedWinner))
+      return false;
+    pos.undo_move(m);
+  }
   return true;
 }

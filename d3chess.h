@@ -123,7 +123,7 @@ namespace D3Chess {
     return totalCounter;
   }
 
-void loop(int argc, char* argv[]);
+  void loop(int argc, char* argv[]);
 
 } // namespace D3Chess
 
