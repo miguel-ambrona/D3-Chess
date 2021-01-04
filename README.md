@@ -1,6 +1,6 @@
-# D3-Chess
+# Chess Helpmate Analyzer <img src="https://miguel-ambrona.github.io/img/cha.png" width="70px" align="right">
 
-Dead Draw Detector (D3) is an implementation of a decision procedure for checking whether
+Chess Helpmate Analyzer (CHA) is an implementation of a decision procedure for checking whether
 there exists a sequence of legal moves that allows a certain player to checkmate their
 opponent in a given chess position.
 
