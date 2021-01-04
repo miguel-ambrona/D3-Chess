@@ -14,6 +14,7 @@
 
 cha:
 	cp main.cpp Stockfish/src/
+	cp util.* Stockfish/src/
 	cp semistatic.* Stockfish/src/
 	cp dynamic.* Stockfish/src/
 	cd Stockfish/src && make build -j ARCH=x86-64
@@ -21,7 +22,7 @@ cha:
 
 get-stockfish:
 	git clone https://github.com/official-stockfish/Stockfish.git
-	sed -ie '/^OBJS/i SRCS += dynamic.cpp semistatic.cpp' Stockfish/src/Makefile
+	sed -ie '/^OBJS/i SRCS += dynamic.cpp semistatic.cpp util.cpp' Stockfish/src/Makefile
 
 .PHONY: cha clean
 

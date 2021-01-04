@@ -20,6 +20,7 @@
 #include "timeman.h"
 #include "tt.h"
 #include "uci.h"
+#include "util.h"
 #include "semistatic.h"
 #include "dynamic.h"
 
@@ -63,84 +64,6 @@ void CHA::Search::print_result(int mate, bool showMate) const {
     std::cout << "# ";
   }
 }
-
-namespace KnightDistance {
-
-  // The next function computes the knight distance between two squares.
-  // Note that this can be calculated from just the rank distance and
-  // the file distance between the squares, following the tables:
-  //
-  //      0 2 4 6            1 3 5 7            1 3 5 7
-  //     ---------          ---------          ---------
-  //  0 | 0 2 2 4        1 | 2 2 4 4        0 | 3 3 3 5
-  //  2 |   4 2 4        3 |   2 4 4        2 | 1 3 3 5
-  //  4 |     4 4        5 |     4 4        4 | 3 3 3 5
-  //  6 |       4        7 |       6        6 | 3 3 5 5
-  //
-  // Exceptionally, distance(SQ_A8, SQ_B7) = 4 cannot be computed from the
-  // tables, as well as the symmetric cases in other corners.
-
-  bool is_corner(Square x){
-    return (x == SQ_A1 || x == SQ_H1 || x == SQ_A8 || x == SQ_H8);
-  }
-
-  int knight_distance(Square x, Square y){
-
-    std::pair<int, int> idx = std::minmax(distance<File>(x, y), distance<Rank>(x, y));
-
-    // Handle the exceptional cases
-
-    if (idx.first == 1 && idx.second == 1 && (is_corner(x) || is_corner(y)))  return 4;
-
-    // First and second tables
-    if (idx.first % 2 == idx.second % 2)
-    {
-      if (idx.first == 0 && idx.second == 0)  return 0;
-      if (idx.first == 0 && idx.second == 2)  return 2;
-      if (idx.first == 0 && idx.second == 4)  return 2;
-      if (idx.first == 2 && idx.second == 4)  return 2;
-
-      if (idx.first == 1 && idx.second == 1)  return 2;
-      if (idx.first == 1 && idx.second == 3)  return 2;
-      if (idx.first == 3 && idx.second == 3)  return 2;
-      if (idx.first == 7 && idx.second == 7)  return 6;
-
-      return 4;
-    }
-
-    // Third table
-    else
-    {
-      if (idx.second == 7)                    return 5;
-      if (idx.first == 1 && idx.second == 2)  return 1;
-      if (idx.first == 5 && idx.second == 6)  return 5;
-
-      return 3;
-    }
-  }
-
-  // In practice, instead of calling the above function all the time, we can store
-  // the distances between any two squares in an array. Is this really faster?
-
-  static int KnightDistance[4096];  // 64 * 64 = 4096
-
-  inline unsigned index(Square x, Square y){
-    return int(x) | (y << 6);
-  }
-
-  void init() {
-    for (Square x = SQ_A1; x <= SQ_H8; ++x)
-    {
-      for (Square y = SQ_A1; y <= SQ_H8; ++y)
-        KnightDistance[index(x,y)] = knight_distance(x,y);
-    }
-  }
-
-  int get(Square x, Square y){
-    return KnightDistance[index(x, y)];
-  }
-
-} // namespace KnightDistance
 
 namespace {
 
@@ -471,7 +394,6 @@ namespace {
     else
       return ~pos.side_to_move();
   }
-
 
 } // namespace
 

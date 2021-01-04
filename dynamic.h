@@ -17,8 +17,6 @@
 #ifndef CHA_H_INCLUDED
 #define CHA_H_INCLUDED
 
-//class Position;
-
 namespace CHA {
 
   constexpr int MAX_VARIATION_LENGTH = 2000;

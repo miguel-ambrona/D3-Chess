@@ -14,29 +14,27 @@
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
 
-#include "thread.h"
-#include "uci.h"
-#include "util.h"
-#include "semistatic.h"
-#include "dynamic.h"
+#ifndef UTIL_H_INCLUDED
+#define UTIL_H_INCLUDED
 
-int main(int argc, char* argv[]) {
+namespace UTIL {
 
-  std::cout << "Dead Draw Detector version 2.0" << std::endl;
+  void unmove(Square *presquares, PieceType p, Color c, Square s);
+  Bitboard neighbours(Square s);
+  Square find_king(Position& pos, Color c);
 
-  CommandLine::init(argc, argv);
-  UCI::init(Options);
-  Bitboards::init();
-  Position::init();
-  Bitbases::init();
-  SemiStatic::init();
+  bool is_corner(Square s);
 
-  Threads.set(size_t(Options["Threads"]));
-
-  CHA::loop(argc, argv);
-
-  Threads.set(0);
-  return 0;
-}
+} // namespace UTIL
 
 
+namespace KnightDistance {
+
+  int knight_distance(Square x, Square y);
+
+  void init();
+  int get(Square x, Square y);
+
+} // namespace KnightDistance
+
+#endif // #ifndef UTIL_H_INCLUDED

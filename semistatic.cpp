@@ -16,54 +16,8 @@
 
 #include "timeman.h"
 #include "uci.h"
+#include "util.h"
 #include "semistatic.h"
-
-constexpr int NONE = 128;  // High enough to go outside of the board
-
-int PAWN_INCS[8]   = { -8, -7, -9, NONE, NONE, NONE, NONE, NONE };
-int KNIGHT_INCS[8] = { 17, 15, 10, 6, -6, -10, -15, -17 };
-int BISHOP_INCS[8] = { 9, 7, -7, -9, NONE, NONE, NONE, NONE };
-int ROOK_INCS[8]   = { 8, 1, -1, -8, NONE, NONE, NONE, NONE };
-int QUEEN_INCS[8]  = { 9, 8, 7, 1, -1, -7, -8, -9 };
-int KING_INCS[8]   = { 9, 8, 7, 1, -1, -7, -8, -9 };
-
-int *INCREMENTS[6] = { PAWN_INCS, KNIGHT_INCS, BISHOP_INCS, ROOK_INCS, QUEEN_INCS, KING_INCS };
-
-bool overflow(Square source, Square target) {
-  return abs((source % 8) - (target % 8)) > 2 || target < SQ_A1 || target > SQ_H8;
-}
-
-void unmove(Square *presquares, PieceType p, Color c, Square s) {
-
-  int i = 0;
-  int direction = (c == WHITE) ? 1 : -1;
-
-  for (int j = 0; j < 8; ++j)
-  {
-    Square prev = (Square) (s + direction * INCREMENTS[p-1][j]);
-    if (overflow(s, prev))
-      continue;
-
-    presquares[i] = prev;
-    i++;
-  }
-  if (i < 8)
-    presquares[i] = (Square) -1;
-}
-
-Bitboard neighbours(Square s) {
-
-  Bitboard sNeighbours = 0;
-  Square presquares[8];
-  unmove(presquares, KING, WHITE, s);  // Color does not matter
-  for (int j = 0; j < 8; ++j)
-  {
-    if (presquares[j] < 0)
-      break;
-    sNeighbours |= presquares[j];
-  }
-  return sNeighbours;
-}
 
 void SemiStatic::System::init() {
 
@@ -76,7 +30,7 @@ void SemiStatic::System::init() {
         for (Square t = SQ_A1; t <= SQ_H8; ++t)
         {
           i = index(p,c,s,t);
-          unmove(presquares,p,c,t);
+          UTIL::unmove(presquares,p,c,t);
 
           for (j = 0; j < 8; ++j)
           {
@@ -92,6 +46,8 @@ void SemiStatic::System::saturate(Position& pos) {
 
   // Initialize the variables
 
+  // FIXME: We do not need to set everything to 'false', only those variable which
+  // will be used. This depends on the position (will that save significant time?).
   for (int j = 0; j < N_MOVE_VARS; ++j)
     variables[j] = false;
 
@@ -227,20 +183,10 @@ void SemiStatic::System::saturate(Position& pos) {
   } // end while
 }
 
-Square find_king(Position& pos, Color c) {
-
-  Square s;
-  Bitboard king = pos.pieces(c, KING);
-  for (s = SQ_A1; s <= SQ_H8; ++s)
-    if (king & s)
-      break;
-  return s;
-}
-
 Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
 
   Bitboard region = 0;
-  Square s = find_king(pos, c);
+  Square s = UTIL::find_king(pos, c);
   for (Square t = SQ_A1; t <= SQ_H8; ++t)
     if (variables[index(KING,c,s,t)])
       region |= t;
@@ -298,13 +244,13 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     Bitboard escapingSquares = 0;
     Bitboard checkingSquares = 0;
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
-      if (distance<Square>(s,t) == 1 && ~visitorsSquareColor & t)
+      if (distance<Square>(s,t) == 1 && loserKingRegion & t)
       {
-        if (loserKingRegion & t)
+        if (~visitorsSquareColor & t)
         {
           // We call it a escaping square only if Winner king cannot threaten it
           if (!(pos.pieces(intendedWinner, KING) &
-                SemiStatic::System::visitors(pos, neighbours(t), intendedWinner)))
+                SemiStatic::System::visitors(pos, UTIL::neighbours(t), intendedWinner)))
             escapingSquares |= t;
         }
 
@@ -346,8 +292,8 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
       return false;
   }
 
-  // If we made it so far it is because the winner's single-colored bishops cannot mate since
-  // all squares in the loser king region admit at least an opposite color escaping square
+  // If we made it so far it is because the Winner's single-colored bishops cannot mate since
+  // all squares in the Loser's king region admit at least an opposite color escaping square
 
   return true;
 }
