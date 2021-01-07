@@ -216,6 +216,23 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 
 bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
+  // If en passant is possible, return false
+
+  for (const auto& m : MoveList<LEGAL>(pos))
+    if (type_of(m) == ENPASSANT)
+      return false;
+
+  // Trivial progress: as long as there is only one legal move, make that move
+  StateInfo st;
+  if (MoveList<LEGAL>(pos).size() == 1)
+    for (const auto& m : MoveList<LEGAL>(pos))
+    {
+      pos.do_move(m, st);
+      bool unwinnable = SemiStatic::System::is_unwinnable(pos, intendedWinner);
+      pos.undo_move(m);
+      return unwinnable;
+    }
+
   Bitboard loserKingRegion = king_region(pos, ~intendedWinner);
   Bitboard visitors = SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner);
 

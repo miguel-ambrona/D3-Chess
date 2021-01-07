@@ -26,6 +26,7 @@
 
 void CHA::Search::init(){
   totalCounter = 0;
+  counter = 0;
 }
 
 void CHA::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis){
@@ -334,12 +335,6 @@ namespace {
       }
       TT.clear();
     }
-
-    // Trivial progress: as long as there is only one legal move, make that move
-    StateInfo st;
-    while (MoveList<LEGAL>(pos).size() == 1)
-      for (const auto& m : MoveList<LEGAL>(pos))
-        pos.do_move(m, st);
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
     for (int maxDepth = 2; maxDepth <= (quickAnalysis ? 5 : 1000); maxDepth++){
