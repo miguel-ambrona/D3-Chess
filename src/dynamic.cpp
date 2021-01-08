@@ -16,6 +16,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <chrono>
 
 #include "timeman.h"
 #include "tt.h"
@@ -216,7 +217,7 @@ namespace {
       return 0;
 
     // Search limits
-    int counterLimit = search.max_depth() * (search.quick_search() ? 1000 : 1000000);
+    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
     if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
@@ -337,7 +338,7 @@ namespace {
     }
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-    for (int maxDepth = 2; maxDepth <= (quickAnalysis ? 5 : 1000); maxDepth++){
+    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
 
       search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
       mate = find_mate(pos, 0, search, false);
@@ -347,11 +348,11 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > (quickAnalysis ? 100000 : 100000000))
+      if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
         break;
     }
 
-    // If the position has not been resolved (no mate was found, but also not proven unwinnable)
+    //If the position has not been resolved (no mate was found, but also not proven unwinnable)
     if (mate < 0 && search.is_interrupted())
     {
       if (SemiStatic::is_unwinnable(pos, intendedWinner))
@@ -441,7 +442,18 @@ void CHA::loop(int argc, char* argv[]) {
     Color intendedWinner = parse_line(pos, &states->back(), line);
     int parameters = showInfo + (skipOutput << 1) + (allowTricks << 2) + (quickAnalysis << 3);
 
-    if (is_unwinnable(pos, intendedWinner, parameters) && runningTests)
+    auto start = std::chrono::high_resolution_clock::now();
+
+    bool unwinnable = is_unwinnable(pos, intendedWinner, parameters);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    if (showInfo)
+      std::cout << "Time used (microseconds): " << duration.count();
+
+    if (unwinnable && runningTests)
       std::cout << "Unwinnable: " << line << pos << std::endl;
 
     else if (showInfo && runningTests)
