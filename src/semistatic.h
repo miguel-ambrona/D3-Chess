@@ -51,7 +51,7 @@ namespace SemiStatic {
 
     void init();
 
-    unsigned index(PieceType p, Color c, Square source, Square target) const;
+    int index(PieceType p, Color c, Square source, Square target) const;
     void saturate(Position& pos);
     Bitboard king_region(Position& pos, Color c);
     Bitboard visitors(Position& pos, Bitboard region, Color c);
@@ -59,31 +59,31 @@ namespace SemiStatic {
 
   private:
     // Data members
-    unsigned int equations[N_EQS][8]; // Each equation has at most 8 disjuncts.
+    int equations[N_EQS][8]; // Each equation has at most 8 disjuncts.
     bool variables[N_VARS];
   };
 
-  inline unsigned System::index(PieceType p, Color c, Square source, Square target) const {
+  inline int System::index(PieceType p, Color c, Square source, Square target) const {
     return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | (int)target);
   }
 
-  inline unsigned color_square_index(Color c, Square s){
+  inline int color_square_index(Color c, Square s){
     return (c << 6) | int(s);
   }
 
-  inline unsigned prom_index(Color c, Square s) {
+  inline int prom_index(Color c, Square s) {
     return N_MOVE_VARS + color_square_index(c,s);
   }
 
-  inline unsigned clear_index(Color c, Square s) {
+  inline int clear_index(Color c, Square s) {
     return N_MOVE_VARS + 128 + color_square_index(c,s);
   }
 
-  inline unsigned reach_index(Color c, Square s) {
+  inline int reach_index(Color c, Square s) {
     return N_MOVE_VARS + 256 + color_square_index(c,s);
   }
 
-  inline unsigned attack_index(Color c, Square s) {
+  inline int attack_index(Color c, Square s) {
     return N_MOVE_VARS + 384 + color_square_index(c,s);
   }
 
