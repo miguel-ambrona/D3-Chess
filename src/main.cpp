@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[]) {
 
-  std::cout << "Dead Draw Detector version 2.0" << std::endl;
+  std::cout << "Chess Helpmate Analyzer (CHA) version 2.0" << std::endl;
 
   CommandLine::init(argc, argv);
   UCI::init(Options);
