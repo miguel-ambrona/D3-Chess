@@ -427,7 +427,7 @@ void CHA::loop(int argc, char* argv[]) {
   if (!allowTricks)
     quickAnalysis = false;
 
-  std::ifstream infile("../examples/lichess-30K-games.txt");
+  std::ifstream infile("../tests/lichess-30K-games.txt");
 
   int i = 0;
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {

@@ -87,14 +87,6 @@ void SemiStatic::System::saturate(Position& pos) {
   {
     change = false;
 
-    // Bitboard rr = 0;
-    // for (Square s = SQ_A1; s <= SQ_H8; ++s)
-    //   //if (variables[index(PAWN, BLACK, SQ_C3, s)])
-    //   if (variables[index(KING, WHITE, SQ_G2, s)])
-    //     rr |= s;
-
-    // std::cout << Bitboards::pretty(rr);
-
     for (int k = 0; k < n; ++k)
     {
       Square source = occupied[k];
@@ -360,7 +352,7 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner) {
   return SYSTEM.is_unwinnable(pos, intendedWinner);
 }
 
-// Check if the possition if after the first move, the possition is semistatically unwinnable
+// Check if the position is unwinnable in all positions at depth 1-ply
 
 bool SemiStatic::is_unwinnable_after_one_move(Position& pos, Color intendedWinner) {
 

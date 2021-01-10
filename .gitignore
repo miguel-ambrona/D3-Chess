@@ -34,4 +34,4 @@
 # Binary and Stockfish
 cha
 Stockfish/
-
+src/*.txt
