@@ -45,7 +45,7 @@ to be used by chess servers with a minimal computational overhead.
 
 ## Tests
 
-Running CHA 2.0 on the final position of a test set 5 million games from the
+Running CHA 2.0 on the final position of a test set of 5 million games from the
 [Lichess game database](https://database.lichess.org/)
 (that were won on time by one of the players) led to identifying
 [321 of them](https://github.com/miguel-ambrona/D3-Chess/blob/main/tests/unfair.txt)
