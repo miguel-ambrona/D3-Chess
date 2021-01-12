@@ -333,7 +333,7 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner) {
 
   // If en passant is possible, return false
   for (const auto& m : MoveList<LEGAL>(pos))
-    if (type_of(m) == ENPASSANT)
+    if (type_of(m) == EN_PASSANT)
       return false;
 
   // Trivial progress: as long as there is only one legal move, make that move
