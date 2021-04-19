@@ -216,7 +216,7 @@ namespace {
       return 0;
 
     // Search limits
-    //    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 10000000000);
+    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
     if (depth >= search.max_depth())// || search.get_counter() > counterLimit)
     {
       search.interrupt();
@@ -337,7 +337,7 @@ namespace {
     }
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-    for (int maxDepth = 14; maxDepth <= 14; maxDepth++){
+    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
 
       search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
       mate = find_mate(pos, 0, search, false);
@@ -347,8 +347,8 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      //if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
-      //        break;
+      if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
+        break;
     }
 
     //If the position has not been resolved (no mate was found, but also not proven unwinnable)
