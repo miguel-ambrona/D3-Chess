@@ -1,5 +1,5 @@
 /*
-  Chess Helpmate Analyzer, an implementation of a decision procedure for checking
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
   whether a certain player can deliver checkmate (i.e. win) in a given chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
@@ -8,7 +8,7 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Helpmate Analyzer is distributed in the hope that it will be useful,
+  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[]) {
 
-  std::cout << "Chess Helpmate Analyzer (CHA) version 2.0" << std::endl;
+  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.0" << std::endl;
 
   CommandLine::init(argc, argv);
   UCI::init(Options);

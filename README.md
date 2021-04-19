@@ -1,11 +1,14 @@
-# Chess Helpmate Analyzer 2.0<img src="https://miguel-ambrona.github.io/img/cha.png" width="70px" align="right">
+# Chess Unwinnability Analyzer 2.0<img src="https://miguel-ambrona.github.io/img/cha.png" width="70px" align="right">
 
-Chess Helpmate Analyzer (CHA) is a free and open-source implementation of a decision procedure
+Chess Unwinnability Analyzer is a free and open-source implementation of a decision procedure
 for *checking whether there exists a sequence of legal moves that allows a certain player to checkmate their opponent*
 in a given chess position.
 
 This tool uses [Stockfish](https://github.com/official-stockfish/Stockfish) as a back end
 for move generation and chess-related functions.
+
+Due to an early name of this repository, we will refer to this tool as CHA, which stands for
+*Chess Helpmate Analyzer*.
 
 
 ## What is this useful for?
@@ -82,7 +85,7 @@ the last player to make a move**
 
 For example:
 
-> Chess Helpmate Analyzer (CHA) version 2.0<br>
+> Chess Unwinnability Analyzer (CHA) version 2.0<br>
 > 2k5/8/3b4/8/3NK3/8/8/8 w - - 0 1 black<br>
 > Found checkmate in 30 plies (Total positions searched: 350)
 

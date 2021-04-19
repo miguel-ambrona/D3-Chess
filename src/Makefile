@@ -1,4 +1,4 @@
-#  Chess Helpmate Analyzer, an implementation of a decision procedure for checking
+#  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
 #  whether a certain player can deliver checkmate (i.e. win) in a given chess position.
 #
 #  This software leverages Stockfish as a backend for chess-related functions.
@@ -7,7 +7,7 @@
 #  The full source code of Stockfish can be found here:
 #  <https://github.com/official-stockfish/Stockfish>.
 #
-#  Chess Helpmate Analyzer is distributed in the hope that it will be useful,
+#  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 #  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 
@@ -21,6 +21,7 @@ cha:
 
 get-stockfish:
 	git clone https://github.com/official-stockfish/Stockfish.git
+	cd Stockfish && git checkout 7d0a16e06d968c81f171
 	sed -ie '/^OBJS/i SRCS += dynamic.cpp semistatic.cpp util.cpp' Stockfish/src/Makefile
 
 .PHONY: cha clean

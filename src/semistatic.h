@@ -1,5 +1,5 @@
 /*
-  Chess Helpmate Analyzer, an implementation of a decision procedure for checking
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
   whether a certain player can deliver checkmate (i.e. win) in a given chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
@@ -8,7 +8,7 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Helpmate Analyzer is distributed in the hope that it will be useful,
+  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
@@ -37,9 +37,8 @@ namespace SemiStatic {
   constexpr int N_PROM_VARS   = 128;    // 2 * 64 (color * from_sq)
   constexpr int N_CLEAR_VARS  = 128;    // 2 * 64 (color * square)
   constexpr int N_REACH_VARS  = 128;    // 2 * 64 (color * square)
-  constexpr int N_ATTACK_VARS = 128;    // 2 * 64 (color * targetted_sq)
 
-  // Equations for clear, reach and attack variables are handeled independently:
+  // Equations for clear and reach variables are handeled independently:
 
   constexpr int N_EQS = 49280;  // N_MOVE_VARS + N_PROM_VARS
   constexpr int N_VARS = 49664; // N_MOVE_VARS + 128 * 4
@@ -80,10 +79,6 @@ namespace SemiStatic {
 
   inline int reach_index(Color c, Square s) {
     return N_MOVE_VARS + 256 + color_square_index(c,s);
-  }
-
-  inline int attack_index(Color c, Square s) {
-    return N_MOVE_VARS + 384 + color_square_index(c,s);
   }
 
   void init();

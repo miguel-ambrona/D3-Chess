@@ -1,5 +1,5 @@
 /*
-  Chess Helpmate Analyzer, an implementation of a decision procedure for checking
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
   whether a certain player can deliver checkmate (i.e. win) in a given chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
@@ -8,7 +8,7 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Helpmate Analyzer is distributed in the hope that it will be useful,
+  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
   or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
 */
@@ -216,8 +216,8 @@ namespace {
       return 0;
 
     // Search limits
-    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
-    if (depth >= search.max_depth() || search.get_counter() > counterLimit)
+    //    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 10000000000);
+    if (depth >= search.max_depth())// || search.get_counter() > counterLimit)
     {
       search.interrupt();
       return -1;
@@ -337,7 +337,7 @@ namespace {
     }
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
+    for (int maxDepth = 14; maxDepth <= 14; maxDepth++){
 
       search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
       mate = find_mate(pos, 0, search, false);
@@ -347,8 +347,8 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
-        break;
+      //if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
+      //        break;
     }
 
     //If the position has not been resolved (no mate was found, but also not proven unwinnable)
