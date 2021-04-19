@@ -217,7 +217,7 @@ namespace {
 
     // Search limits
     int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
-    if (depth >= search.max_depth())// || search.get_counter() > counterLimit)
+    if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
       return -1;
