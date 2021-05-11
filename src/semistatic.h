@@ -83,7 +83,7 @@ namespace SemiStatic {
 
   void init();
 
-  bool is_unwinnable(Position& pos, Color intendedWinner);
+  bool is_unwinnable(Position& pos, Color intendedWinner, int trivialProgressBound);
   bool is_unwinnable_after_one_move(Position& pos, Color intendedWinner);
 
 } // namespace SemiStatic

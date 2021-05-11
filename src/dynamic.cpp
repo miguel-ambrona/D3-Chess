@@ -326,7 +326,7 @@ namespace {
 
     if (!quickAnalysis)
     {
-      if (SemiStatic::is_unwinnable(pos, intendedWinner))
+      if (SemiStatic::is_unwinnable(pos, intendedWinner, 0))
       {
         search.set_unwinnable();
         if (!skipOutput)
@@ -351,10 +351,10 @@ namespace {
         break;
     }
 
-    //If the position has not been resolved (no mate was found, but also not proven unwinnable)
+    // If the position has not been resolved (no mate was found, but also not proven unwinnable)
     if (mate < 0 && search.is_interrupted())
     {
-      if (SemiStatic::is_unwinnable(pos, intendedWinner))
+      if (SemiStatic::is_unwinnable(pos, intendedWinner, 0))
         search.set_unwinnable();
 
       else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
