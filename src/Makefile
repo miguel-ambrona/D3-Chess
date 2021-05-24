@@ -21,7 +21,7 @@ cha:
 
 get-stockfish:
 	git clone https://github.com/official-stockfish/Stockfish.git
-	cd Stockfish && git checkout 7d0a16e06d968c81f171
+	cd Stockfish && git checkout 51deae8
 	sed -ie '/^OBJS/i SRCS += dynamic.cpp semistatic.cpp util.cpp' Stockfish/src/Makefile
 
 .PHONY: cha clean
