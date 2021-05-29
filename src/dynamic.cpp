@@ -313,7 +313,7 @@ namespace {
   // Use 'skipOutput' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
-  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters) {
+  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters, int searchLimit) {
 
     int mate;
     static CHA::Search search = CHA::Search();
@@ -347,7 +347,7 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > (quickAnalysis ? 1000 : 100000000))
+      if (search.get_total_counter() > (quickAnalysis ? 1000 : searchLimit))
         break;
     }
 
@@ -405,6 +405,7 @@ void CHA::loop(int argc, char* argv[]) {
   bool runningTests = false;
   bool allowTricks = true;
   bool quickAnalysis = false;
+  int searchLimit = 100000000;
 
   for (int i = 1; i < argc; ++i){
     if (std::string(argv[i]) == "--show-info")
@@ -418,6 +419,9 @@ void CHA::loop(int argc, char* argv[]) {
 
     if (std::string(argv[i]) == "-quick")
       quickAnalysis = true;
+
+    if (std::string(argv[i]) == "-limit")
+      searchLimit = std::stoi(argv[i+1]);
   }
 
   bool skipOutput = !showInfo && runningTests;
@@ -443,7 +447,7 @@ void CHA::loop(int argc, char* argv[]) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    bool unwinnable = is_unwinnable(pos, intendedWinner, parameters);
+    bool unwinnable = is_unwinnable(pos, intendedWinner, parameters, searchLimit);
 
     auto stop = std::chrono::high_resolution_clock::now();
 
@@ -453,7 +457,7 @@ void CHA::loop(int argc, char* argv[]) {
       std::cout << "Time used (microseconds): " << duration.count();
 
     if (unwinnable && runningTests)
-      std::cout << "Unwinnable: " << line << pos << std::endl;
+      std::cout << "Unwinnable: " << line << std::endl;
 
     else if (showInfo && runningTests)
       std::cout << line << std::endl;
