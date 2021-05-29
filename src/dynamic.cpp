@@ -24,6 +24,12 @@
 #include "semistatic.h"
 #include "dynamic.h"
 
+enum SearchResult {
+  WINNABLE,
+  UNWINNABLE,
+  INTERRUPTED
+};
+
 void CHA::Search::init(){
   totalCounter = 0;
   counter = 0;
@@ -42,24 +48,24 @@ void CHA::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bo
   counter = 0;
 }
 
-void CHA::Search::print_result(int mate) const {
+void CHA::Search::print_result(int mateLen) const {
 
   // This function should only be called when the search has been completed
 
-  if (mate >= 0){
-    std::cout << "Winnable. Mate in " << mate << " plies:" ;
-    for (int i = 0; i < std::min(mate, MAX_VARIATION_LENGTH); i++)
+  if (mateLen >= 0){
+    std::cout << "winnable";
+    for (int i = 0; i < std::min(mateLen, MAX_VARIATION_LENGTH); i++)
       std::cout << " " << UCI::move(checkmateSequence[i], false);
-    std::cout << "# ";
+    std::cout << "#";
   }
 
   else if (!interrupted || unwinnable)
-    std::cout << "Unwinnable";
+    std::cout << "unwinnable";
 
   else
-    std::cout << "Search interrupted";
+    std::cout << "interrupted";
 
-  std::cout << " (Total positions searched: " << (totalCounter + counter) << ")\n";
+  std::cout << " nodes " << (totalCounter + counter);
 }
 
 namespace {
@@ -212,7 +218,7 @@ namespace {
       return 0;
 
     // Search limits
-    uint64_t counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
+    uint64_t counterLimit = search.max_depth() * (search.quick_search() ? 1000 : 1000000);
     if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
@@ -303,12 +309,10 @@ namespace {
     return -1;
   }
 
-  // This function returns 'true' if it is impossible for intendedWinner to deliver checkmate
-  // in the given position.
   // Use 'skipWinnable' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
-  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters, uint64_t searchLimit) {
+  SearchResult analyze(Position& pos, Color intendedWinner, int parameters, uint64_t searchLimit) {
 
     int mate;
     static CHA::Search search = CHA::Search();
@@ -324,7 +328,8 @@ namespace {
       {
         search.set_unwinnable();
         search.print_result(-1);
-        return true;
+        std::cout << " blocked";
+        return UNWINNABLE;
       }
       TT.clear();
     }
@@ -340,7 +345,7 @@ namespace {
         break;
 
       // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > (quickAnalysis ? 1000 : searchLimit))
+      if (search.get_total_counter() > (quickAnalysis ? 100000 : searchLimit))
         break;
     }
 
@@ -354,10 +359,17 @@ namespace {
         search.set_unwinnable();
     }
 
-    if (!skipWinnable || mate < 0)
+    if (mate <= 0 || !skipWinnable)
       search.print_result(mate);
 
-    return (mate < 0 && !search.is_interrupted()) || search.is_unwinnable();
+    if (mate >= 0)
+      return WINNABLE;
+
+    else if (search.is_unwinnable())
+      return UNWINNABLE;
+
+    else
+      return INTERRUPTED;
   }
 
   // We expect input commands to be a line of text containing a FEN followed by the intended winner
@@ -438,22 +450,16 @@ void CHA::loop(int argc, char* argv[]) {
     Color intendedWinner = parse_line(pos, &states->back(), line);
     int parameters =  skipWinnable + (allowTricks << 1) + (quickAnalysis << 2);
 
-    //auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
-    bool unwinnable = is_unwinnable(pos, intendedWinner, parameters, searchLimit);
+    SearchResult result = analyze(pos, intendedWinner, parameters, searchLimit);
 
-    //auto stop = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    if (!skipWinnable || result != WINNABLE)
+      std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
 
-    //    if (showInfo)
-    //  std::cout << "Time used (microseconds): " << duration.count();
-
-    //else if (showInfo && runningTests)
-    // std::cout << line << std::endl;
-
-    //if (!skipOutput)
-    //  std::cout << std::endl;
   }
 
   Threads.stop = true;

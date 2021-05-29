@@ -46,7 +46,7 @@ namespace CHA {
     uint64_t get_counter() const;
     uint64_t get_total_counter() const;
 
-    void print_result(int mate) const;
+    void print_result(int mateLen) const;
 
   private:
     // Data members
