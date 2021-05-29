@@ -216,7 +216,7 @@ namespace {
       return 0;
 
     // Search limits
-    int counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
+    uint64_t counterLimit = search.max_depth() * (search.quick_search() ? 100 : 1000000);
     if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
@@ -313,7 +313,7 @@ namespace {
   // Use 'skipOutput' to not print anything (useful when running many tests).
   // Set 'allowTricks = false' when searching for the shortest mate.
 
-  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters, int searchLimit) {
+  bool is_unwinnable(Position& pos, Color intendedWinner, int parameters, uint64_t searchLimit) {
 
     int mate;
     static CHA::Search search = CHA::Search();
@@ -405,7 +405,7 @@ void CHA::loop(int argc, char* argv[]) {
   bool runningTests = false;
   bool allowTricks = true;
   bool quickAnalysis = false;
-  int searchLimit = 100000000;
+  uint64_t searchLimit = 100000000;
 
   for (int i = 1; i < argc; ++i){
     if (std::string(argv[i]) == "--show-info")
@@ -420,8 +420,10 @@ void CHA::loop(int argc, char* argv[]) {
     if (std::string(argv[i]) == "-quick")
       quickAnalysis = true;
 
-    if (std::string(argv[i]) == "-limit")
-      searchLimit = std::stoi(argv[i+1]);
+    if (std::string(argv[i]) == "-limit"){
+      std::istringstream iss(argv[i+1]);
+      iss >> searchLimit;
+    }
   }
 
   bool skipOutput = !showInfo && runningTests;

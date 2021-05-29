@@ -43,8 +43,8 @@ namespace CHA {
     bool quick_search() const;
     bool is_interrupted() const;
     bool is_unwinnable() const;
-    int get_counter() const;
-    int get_total_counter() const;
+    uint64_t get_counter() const;
+    uint64_t get_total_counter() const;
 
     void print_result(int mate, bool showMate) const;
 
@@ -112,11 +112,11 @@ namespace CHA {
     return unwinnable;
   }
 
-  inline int Search::get_counter() const {
+  inline uint64_t Search::get_counter() const {
     return counter;
   }
 
-  inline int Search::get_total_counter() const {
+  inline uint64_t Search::get_total_counter() const {
     return totalCounter;
   }
 
