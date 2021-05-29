@@ -219,17 +219,20 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 
   Bitboard visitors = 0;
   for (Square s = SQ_A1; s <= SQ_H8; ++s)
-    for (Square t = SQ_A1; t <= SQ_H8; ++t)
-    {
-      Piece pc = pos.piece_on(s);
-      PieceType p = type_of(pc);
-      if (p == NO_PIECE_TYPE)
-        continue;
+  {
+    Piece pc = pos.piece_on(s);
+    PieceType p = type_of(pc);
 
-      Color color = color_of(pc);
+    if (p == NO_PIECE_TYPE)
+      continue;
+
+    Color color = color_of(pc);
+
+    for (Square t = SQ_A1; t <= SQ_H8; ++t)
       if (color == c && (region & t) && variables[index(p,c,s,t)])
         visitors |= s;
-    }
+  }
+
   return visitors;
 }
 
