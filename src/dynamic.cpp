@@ -24,11 +24,7 @@
 #include "semistatic.h"
 #include "dynamic.h"
 
-enum SearchResult {
-  WINNABLE,
-  UNWINNABLE,
-  INTERRUPTED
-};
+enum SearchResult { WINNABLE, UNWINNABLE, INTERRUPTED };
 
 void CHA::Search::init(){
   totalCounter = 0;
@@ -238,8 +234,26 @@ namespace {
     bool winMaterial = pos.non_pawn_material(winner);
 
     // Iterate over all legal moves
-    for (const auto& m : MoveList<LEGAL>(pos))
+    auto moves = MoveList<LEGAL>(pos);
+    auto __begin = std::begin(moves);
+    auto __end = std::end(moves) ;
+
+    bool reversed = !isWinnersTurn;
+    if (reversed)
     {
+      __begin = std::end(moves)-1;
+      __end = std::begin(moves)-1;
+    }
+
+    for ( ; __begin != __end; )
+    {
+      auto& m = *__begin;
+
+      if (reversed)
+        --__begin;
+
+      else
+        ++__begin;
 
       PieceType movedPiece = type_of(pos.moved_piece(m));
       VariationType variation = NORMAL;
@@ -322,6 +336,9 @@ namespace {
     bool allowTricks = parameters & 2;
     bool quickAnalysis = parameters & 4;
 
+    //TT.clear();
+    //return WINNABLE;
+
     if (!quickAnalysis)
     {
       if (SemiStatic::is_unwinnable(pos, intendedWinner, 0))
@@ -359,7 +376,7 @@ namespace {
         search.set_unwinnable();
     }
 
-    if (mate <= 0 || !skipWinnable)
+    if ((mate <= 0 || !skipWinnable) && (!quickAnalysis || search.is_unwinnable()))
       search.print_result(mate);
 
     if (mate >= 0)
@@ -457,7 +474,7 @@ void CHA::loop(int argc, char* argv[]) {
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-    if (!skipWinnable || result != WINNABLE)
+    if ((!skipWinnable || result != WINNABLE) && (!quickAnalysis || result == UNWINNABLE))
       std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
 
   }
