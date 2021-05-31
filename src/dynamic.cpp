@@ -233,11 +233,6 @@ namespace {
     bool isWinnersTurn = pos.side_to_move() == winner;
     Value winMaterial = pos.non_pawn_material(winner);
 
-    const int LIMIT = 20;
-    ExtMove nonRewarded[LIMIT];
-    int nonRewardedDepths[LIMIT];
-    int cnt = 0;
-
     // Iterate over all legal moves
     for (const ExtMove& m : MoveList<LEGAL>(pos))
     {
@@ -277,11 +272,6 @@ namespace {
       if (MoveList<LEGAL>(pos).size() == 0)
         variation = REWARD;
 
-      // Reward also if Loser's king safety has decreased
-      //      if (variation == NORMAL && //&& !little_material(winMaterial) &&
-      //          !isWinnersTurn && king_safety(pos, loser) < kingSafety)
-      //        variation = REWARD;
-
       // Do not reward any variations while Loser has queen(s) if it is their turn
       if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
         variation = (variation = REWARD) ? NORMAL : variation;
@@ -301,15 +291,6 @@ namespace {
       else if (pastProgress)
         newDepth--;
 
-      if ((variation != REWARD) && (cnt < LIMIT) && isWinnersTurn)
-      {
-          nonRewarded[cnt] = m;
-          nonRewardedDepths[cnt] = newDepth;
-          ++cnt;
-          pos.undo_move(m);
-          continue;
-      }
-
       // Continue the search from the new position
       search.annotate_move(m);
       search.step();
@@ -322,29 +303,6 @@ namespace {
       pos.undo_move(m);
 
     } // end of iteration over legal moves
-
-    for (int i = 0; i < cnt; i++)
-    {
-      // std::cout << UCI::move(nonRewarded[i], false) << std::endl;
-
-      ExtMove m = nonRewarded[i];
-
-      // Apply the move
-      StateInfo st;
-      pos.do_move(m, st);
-
-      // Continue the search from the new position
-      search.annotate_move(m);
-      search.step();
-      int checkMate = find_mate(pos, nonRewardedDepths[i], search, false);
-
-      if (checkMate >= 0)
-        return checkMate + 1;
-
-      search.undo_step();
-      pos.undo_move(m);
-
-    }
 
     return -1;
   }
