@@ -217,7 +217,7 @@ namespace {
       return 0;
 
     // Search limits
-    uint64_t counterLimit = search.max_depth() * (search.quick_search() ? 1000 : 1000000);
+    uint64_t counterLimit = search.max_depth() * (search.quick_search() ? 1000 : 2000);
     if (depth >= search.max_depth() || search.get_counter() > counterLimit)
     {
       search.interrupt();
@@ -227,8 +227,6 @@ namespace {
     // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
     if (!search.quick_search())
       tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE, VALUE_NONE);
-
-    Score kingSafety = king_safety(pos, loser);
 
     // Check if Loser has to promote a piece, because Winner has not enough material
     bool needLoserPromotion = need_loser_promotion(pos, winner);
@@ -243,26 +241,36 @@ namespace {
       PieceType movedPiece = type_of(pos.moved_piece(m));
       VariationType variation = NORMAL;
 
-      if (needLoserPromotion && !isWinnersTurn)
-      {
-        PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
-        bool heavyPromotion = promoted == QUEEN || promoted == ROOK || promoted == BISHOP;
+      Square target = set_target(pos, movedPiece, winner);
 
-        variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
+      if (isWinnersTurn)
+      {
+        if (pos.advanced_pawn_push(m))
+          variation = REWARD;
+
+        if (pos.capture(m))
+          variation = REWARD;
+
+        if (going_to_square(m, target, movedPiece))
+          variation = REWARD;
       }
 
       else
       {
-        Square target = set_target(pos, movedPiece, winner);
+        if (needLoserPromotion)
+        {
+          PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
+          bool heavyPromotion = promoted == QUEEN || promoted == ROOK;// || promoted == BISHOP;
 
-        if ((isWinnersTurn && pos.advanced_pawn_push(m))
-            || (going_to_square(m, target, movedPiece) && (isWinnersTurn || !pos.capture(m)))
-            || (isWinnersTurn && pos.capture(m)))
+          variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
+        }
+
+        if (going_to_square(m, target, movedPiece))
           variation = REWARD;
-      }
 
-      if (!isWinnersTurn && pos.capture(m))
-        variation = PUNISH;
+        if (pos.capture(m))
+          variation = PUNISH;
+      }
 
       // Apply the move
       StateInfo st;
@@ -281,9 +289,9 @@ namespace {
         newDepth--;
 
       else if (variation == PUNISH)
-        newDepth = std::min(search.max_depth(), newDepth + 3);
+        newDepth = std::min(search.max_depth(), newDepth + 2);
 
-      // If not rewarded nor punished, but the previous player made some progress, reward this
+      // If the previous player made some progress, reward this
       else if (pastProgress)
         newDepth--;
 
@@ -407,7 +415,7 @@ void CHA::loop(int argc, char* argv[]) {
   bool skipWinnable = false;
   bool allowTricks = true;
   bool quickAnalysis = false;
-  uint64_t searchLimit = 100000000;
+  uint64_t searchLimit = 1000000;
 
   for (int i = 1; i < argc; ++i){
     if (std::string(argv[i]) == "test")
