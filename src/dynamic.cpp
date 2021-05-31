@@ -231,29 +231,16 @@ namespace {
     bool needLoserPromotion = need_loser_promotion(pos, winner);
 
     bool isWinnersTurn = pos.side_to_move() == winner;
-    bool winMaterial = pos.non_pawn_material(winner);
+    Value winMaterial = pos.non_pawn_material(winner);
+
+    const int LIMIT = 20;
+    ExtMove nonRewarded[LIMIT];
+    int nonRewardedDepths[LIMIT];
+    int cnt = 0;
 
     // Iterate over all legal moves
-    auto moves = MoveList<LEGAL>(pos);
-    auto __begin = std::begin(moves);
-    auto __end = std::end(moves) ;
-
-    bool reversed = !isWinnersTurn;
-    if (reversed)
+    for (const ExtMove& m : MoveList<LEGAL>(pos))
     {
-      __begin = std::end(moves)-1;
-      __end = std::begin(moves)-1;
-    }
-
-    for ( ; __begin != __end; )
-    {
-      auto& m = *__begin;
-
-      if (reversed)
-        --__begin;
-
-      else
-        ++__begin;
 
       PieceType movedPiece = type_of(pos.moved_piece(m));
       VariationType variation = NORMAL;
@@ -270,27 +257,33 @@ namespace {
       {
         Square target = set_target(pos, movedPiece, winner);
 
-        if ((critical_material(winMaterial) && isWinnersTurn && pos.advanced_pawn_push(m))
-            || (little_material(winMaterial) && going_to_square(m, target, movedPiece))
-            || (!plenty_of_material(winMaterial) && isWinnersTurn && pos.capture(m)))
+        if ((isWinnersTurn && pos.advanced_pawn_push(m))
+            || (going_to_square(m, target, movedPiece) && (isWinnersTurn || !pos.capture(m)))
+            || (isWinnersTurn && pos.capture(m)))
           variation = REWARD;
 
         else if (!isWinnersTurn && movedPiece == QUEEN)
           variation = PUNISH;
       }
 
+      if (variation == NORMAL && !isWinnersTurn && pos.capture(m))
+        variation = PUNISH;
+
       // Apply the move
       StateInfo st;
       pos.do_move(m, st);
-      search.annotate_move(m);
 
-      // Reward also if Loser's king safety has decreased
-      if (variation == NORMAL && !little_material(winMaterial) &&
-          !isWinnersTurn && king_safety(pos, loser) < kingSafety)
+      // If the game is about to end, also reward
+      if (MoveList<LEGAL>(pos).size() == 0)
         variation = REWARD;
 
+      // Reward also if Loser's king safety has decreased
+      //      if (variation == NORMAL && //&& !little_material(winMaterial) &&
+      //          !isWinnersTurn && king_safety(pos, loser) < kingSafety)
+      //        variation = REWARD;
+
       // Do not reward any variations while Loser has queen(s) if it is their turn
-      if (!isWinnersTurn && critical_material(winMaterial) && popcount(pos.pieces(loser, QUEEN)) > 0)
+      if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
         variation = (variation = REWARD) ? NORMAL : variation;
 
       Depth newDepth = depth + 1;
@@ -302,13 +295,23 @@ namespace {
         newDepth--;
 
       else if (variation == PUNISH)
-        newDepth = std::min(search.max_depth(), newDepth + 2);
+        newDepth = std::min(search.max_depth(), newDepth + 3);
 
       // If not rewarded nor punished, but the previous player made some progress, reward this
-      else if (pastProgress && little_material(winMaterial))
+      else if (pastProgress)
         newDepth--;
 
+      if ((variation != REWARD) && (cnt < LIMIT) && isWinnersTurn)
+      {
+          nonRewarded[cnt] = m;
+          nonRewardedDepths[cnt] = newDepth;
+          ++cnt;
+          pos.undo_move(m);
+          continue;
+      }
+
       // Continue the search from the new position
+      search.annotate_move(m);
       search.step();
       int checkMate = find_mate(pos, newDepth, search, variation == REWARD);
 
@@ -319,6 +322,29 @@ namespace {
       pos.undo_move(m);
 
     } // end of iteration over legal moves
+
+    for (int i = 0; i < cnt; i++)
+    {
+      // std::cout << UCI::move(nonRewarded[i], false) << std::endl;
+
+      ExtMove m = nonRewarded[i];
+
+      // Apply the move
+      StateInfo st;
+      pos.do_move(m, st);
+
+      // Continue the search from the new position
+      search.annotate_move(m);
+      search.step();
+      int checkMate = find_mate(pos, nonRewardedDepths[i], search, false);
+
+      if (checkMate >= 0)
+        return checkMate + 1;
+
+      search.undo_step();
+      pos.undo_move(m);
+
+    }
 
     return -1;
   }
@@ -475,7 +501,7 @@ void CHA::loop(int argc, char* argv[]) {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
     if ((!skipWinnable || result != WINNABLE) && (!quickAnalysis || result == UNWINNABLE))
-      std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
+      std::cout << " time " << 12 << " (" << line << ")" << std::endl;
 
   }
 
