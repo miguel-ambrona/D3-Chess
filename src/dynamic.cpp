@@ -44,6 +44,8 @@ void CHA::Search::set(Color intendedWinner, Depth maxDepth, bool allowTricks, bo
   counter = 0;
 }
 
+uint64_t GLOBAL = 0;
+
 void CHA::Search::print_result(int mateLen) const {
 
   // This function should only be called when the search has been completed
@@ -61,6 +63,7 @@ void CHA::Search::print_result(int mateLen) const {
   else
     std::cout << "interrupted";
 
+  GLOBAL += totalCounter + counter;
   std::cout << " nodes " << (totalCounter + counter);
 }
 
@@ -256,21 +259,14 @@ namespace {
             || (going_to_square(m, target, movedPiece) && (isWinnersTurn || !pos.capture(m)))
             || (isWinnersTurn && pos.capture(m)))
           variation = REWARD;
-
-        else if (!isWinnersTurn && movedPiece == QUEEN)
-          variation = PUNISH;
       }
 
-      if (variation == NORMAL && !isWinnersTurn && pos.capture(m))
+      if (!isWinnersTurn && pos.capture(m))
         variation = PUNISH;
 
       // Apply the move
       StateInfo st;
       pos.do_move(m, st);
-
-      // If the game is about to end, also reward
-      if (MoveList<LEGAL>(pos).size() == 0)
-        variation = REWARD;
 
       // Do not reward any variations while Loser has queen(s) if it is their turn
       if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
@@ -462,6 +458,7 @@ void CHA::loop(int argc, char* argv[]) {
       std::cout << " time " << 12 << " (" << line << ")" << std::endl;
 
   }
+  std::cout << "TOTAL: " << GLOBAL << std::endl;
 
   Threads.stop = true;
 }
