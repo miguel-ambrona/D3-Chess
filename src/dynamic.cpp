@@ -324,44 +324,40 @@ namespace {
     bool allowTricks = parameters & 2;
     bool quickAnalysis = parameters & 4;
 
-    //TT.clear();
-    //return WINNABLE;
-
-    if (!quickAnalysis)
-    {
-      if (SemiStatic::is_unwinnable(pos, intendedWinner, 0))
-      {
-        search.set_unwinnable();
-        search.print_result(-1);
-        std::cout << " blocked";
-        return UNWINNABLE;
-      }
-      TT.clear();
-    }
-
-    // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
-
-      search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
-      mate = find_mate(pos, 0, search, false);
-
-      // If the search was finished, but not interrupted, it is because victory is impossible
-      if (mate >= 0 || !search.is_interrupted())
-        break;
-
-      // Remove this limit if you really want to solve the problem (it may be costly sometimes)
-      if (search.get_total_counter() > (quickAnalysis ? 100000 : searchLimit))
-        break;
-    }
+    // Apply a quick search of depth 2
+    search.set(intendedWinner, 2, allowTricks, true);
+    mate = find_mate(pos, 0, search, false);
 
     // If the position has not been resolved (no mate was found, but also not proven unwinnable)
     if (mate < 0 && search.is_interrupted())
     {
       if (SemiStatic::is_unwinnable(pos, intendedWinner, 0))
+      {
         search.set_unwinnable();
+        std::cout << " blocked";
+      }
 
       else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
         search.set_unwinnable();
+    }
+
+    if (mate < 0 && !search.is_unwinnable() && !quickAnalysis)
+    {
+      TT.clear();
+      // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
+      for (int maxDepth = 2; maxDepth <= 1000; maxDepth++){
+
+        search.set(intendedWinner, maxDepth, allowTricks, quickAnalysis);
+        mate = find_mate(pos, 0, search, false);
+
+        // If the search was finished, but not interrupted, it is because victory is impossible
+        if (mate >= 0 || !search.is_interrupted())
+          break;
+
+        // Remove this limit if you really want to solve the problem (it may be costly sometimes)
+        if (search.get_total_counter() > (quickAnalysis ? 100000 : searchLimit))
+          break;
+      }
     }
 
     if ((mate <= 0 || !skipWinnable) && (!quickAnalysis || search.is_unwinnable()))
