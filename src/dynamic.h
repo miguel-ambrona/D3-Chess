@@ -27,7 +27,10 @@ namespace CHA {
     Search() = default;
 
     void init();
-    void set(Color intendedWinner, Depth maxDepth, bool allowTricks, bool quickAnalysis);
+    void set(Depth maxDepth);
+
+    void set_limit(uint64_t local, uint64_t global);
+    void set_winner(Color intendedWinner);
 
     Color intended_winner() const;
     Depth actual_depth() const;
@@ -39,10 +42,10 @@ namespace CHA {
     void step();
     void undo_step();
 
-    bool tricks_allowed() const;
-    bool quick_search() const;
     bool is_interrupted() const;
     bool is_unwinnable() const;
+    bool is_limit_reached() const;
+    bool is_global_limit_reached() const;
     uint64_t get_counter() const;
     uint64_t get_total_counter() const;
 
@@ -56,11 +59,34 @@ namespace CHA {
     Depth maxSearchDepth;
     bool interrupted;
     bool unwinnable;
-    bool tricks;
-    bool quick;
     uint64_t counter;
     uint64_t totalCounter;
+    uint64_t localLimit;
+    uint64_t globalLimit;
   };
+
+  inline void Search::init(){
+    totalCounter = 0;
+    counter = 0;
+  }
+
+  inline void Search::set(Depth maxDepth){
+    depth = 0;
+    maxSearchDepth = maxDepth;
+    interrupted = false;
+    unwinnable = false;
+    totalCounter += counter;
+    counter = 0;
+  }
+
+  inline void Search::set_limit(uint64_t local, uint64_t global) {
+    localLimit = local;
+    globalLimit = global;
+  }
+
+  inline void Search::set_winner(Color intendedWinner) {
+    winner = intendedWinner;
+  }
 
   inline Color Search::intended_winner() const {
     return winner;
@@ -96,20 +122,20 @@ namespace CHA {
     depth--;
   }
 
-  inline bool Search::tricks_allowed() const {
-    return tricks;
-  }
-
-  inline bool Search::quick_search() const {
-    return quick;
-  }
-
   inline bool Search::is_interrupted() const {
     return interrupted;
   }
 
   inline bool Search::is_unwinnable() const {
     return unwinnable;
+  }
+
+  inline bool Search::is_limit_reached() const {
+    return counter > maxSearchDepth * localLimit;
+  }
+
+  inline bool Search::is_global_limit_reached() const {
+    return totalCounter > globalLimit;
   }
 
   inline uint64_t Search::get_counter() const {
