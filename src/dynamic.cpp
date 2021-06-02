@@ -24,23 +24,18 @@
 #include "semistatic.h"
 #include "dynamic.h"
 
-enum SearchResult { WINNABLE, UNWINNABLE, INTERRUPTED };
-
-enum SearchMode   { FULL, QUICK };
-enum SearchTarget { ANY, SHORTEST };
-
-void CHA::Search::print_result(int mateLen) const {
+void CHA::Search::print_result() const {
 
   // This function should only be called when the search has been completed
 
-  if (mateLen >= 0){
+  if (result == WINNABLE){
     std::cout << "winnable";
     for (int i = 0; i < std::min(mateLen, MAX_VARIATION_LENGTH); i++)
       std::cout << " " << UCI::move(checkmateSequence[i], false);
     std::cout << "#";
   }
 
-  else if (unwinnable)
+  else if (result == UNWINNABLE)
     std::cout << "unwinnable";
 
   else
@@ -160,7 +155,7 @@ namespace {
   // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
   // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
 
-  template <SearchMode MODE, SearchTarget TARGET>
+  template <CHA::SearchMode MODE, CHA::SearchTarget TARGET>
   int find_mate(Position& pos, CHA::Search& search, Depth depth, bool pastProgress){
 
     Color winner = search.intended_winner();
@@ -171,7 +166,7 @@ namespace {
     bool found;
     Depth movesLeft = search.max_depth() - depth;
 
-    if (MODE == FULL)
+    if (MODE == CHA::FULL)
     {
       // If the position is found in TT with more depth, we can safetly ignore this branch
       tte = TT.probe(pos.key(), found);
@@ -184,8 +179,10 @@ namespace {
       return -1;
 
     // Checkmate!
-    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() == loser)
+    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() == loser){
+      search.set_winnable();
       return 0;
+    }
 
     // Search limits
     if (depth >= search.max_depth() || search.is_local_limit_reached())
@@ -195,7 +192,7 @@ namespace {
     }
 
     // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
-    if (MODE == FULL)
+    if (MODE == CHA::FULL)
       tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE, VALUE_NONE);
 
     // Check if Loser has to promote a piece, because Winner has not enough material
@@ -205,27 +202,21 @@ namespace {
     // Iterate over all legal moves
     for (const ExtMove& m : MoveList<LEGAL>(pos))
     {
-
       VariationType variation = NORMAL;
 
-      if (TARGET == ANY)
-      {
+      if (TARGET == CHA::ANY) {
         PieceType movedPiece = type_of(pos.moved_piece(m));
         Square target = set_target(pos, movedPiece, winner);
 
-        if (isWinnersTurn)
-        {
+        if (isWinnersTurn) {
           if (pos.advanced_pawn_push(m) || pos.capture(m) || going_to_square(m, target, movedPiece))
             variation = REWARD;
         }
+        else {
 
-        else
-        {
-          if (needLoserPromotion)
-          {
+          if (needLoserPromotion) {
             PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
             bool heavyPromotion = promoted == QUEEN || promoted == ROOK;// || promoted == BISHOP;
-
             variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
           }
 
@@ -235,7 +226,6 @@ namespace {
           if (pos.capture(m))
             variation = PUNISH;
         }
-
       }
 
       // Apply the move
@@ -244,33 +234,26 @@ namespace {
 
       Depth newDepth = depth + 1;
 
-      if (TARGET == ANY)
-      {
+      if (TARGET == CHA::ANY) {
         // Do not reward any variations while Loser has queen(s) if it was their turn
         if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
           variation = (variation = REWARD) ? NORMAL : variation;
 
         switch (variation) {
-          case REWARD:
-            newDepth --;
-            break;
-
-          case PUNISH:
-            newDepth = std::min(search.max_depth(), newDepth + 2);
-            break;
-
+          case REWARD: newDepth--; break;
+          case PUNISH: newDepth = std::min(search.max_depth(), newDepth + 2); break;
           default:
-            // If the previous player made some progress, reward this
-            if (pastProgress)
+            if (pastProgress) // If the previous player made some progress, reward this
               newDepth--;
         }
-
       }
 
       // Continue the search from the new position
       search.annotate_move(m);
       search.step();
+
       int checkMate = find_mate<MODE,TARGET>(pos, search, newDepth, variation == REWARD);
+
       search.undo_step();
       pos.undo_move(m);
 
@@ -282,34 +265,30 @@ namespace {
     return -1;
   }
 
-  // Use 'skipWinnable' to not print anything (useful when running many tests).
-  // Set 'allowTricks = false' when searching for the shortest mate.
-
       // Careful, this function modifies the position, we only want it for extreme completeness:
       //else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
       //  search.set_unwinnable();
 
 
-  SearchResult analyze(Position& pos, CHA::Search& search, bool skipWinnable) {
+  CHA::SearchResult analyze(Position& pos, CHA::Search& search, bool skipWinnable) {
 
     int mate;
     search.init();
 
     // Apply a quick search of depth 2 (may be deeper on rewarded variations)
     search.set(2, 5000);
-    mate = find_mate<QUICK,ANY>(pos, search, 0, false);
+    mate = find_mate<CHA::QUICK,CHA::ANY>(pos, search, 0, false);
 
     // The search was not interrupted, but not mate was found -> unwinnable.
     if (!search.is_interrupted() && mate < 0)
       search.set_unwinnable();
 
-    // If no mate was found, but not declared unwinnable, analyze with semistatic
-    if (mate < 0 && !search.is_unwinnable())
+    if (search.get_result() == CHA::UNDETERMINED)
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         search.set_unwinnable();
 
     // No mate was found but not declared unwinnable, perform the full search
-    if (mate < 0 && !search.is_unwinnable())
+    if (search.get_result() == CHA::UNDETERMINED)
     {
       // Clearing the TT takes significant time, that is why we did not do it before
       TT.clear();
@@ -318,7 +297,7 @@ namespace {
       for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
       {
         search.set(maxDepth, 10000);
-        mate = find_mate<FULL,ANY>(pos, search, 0, false);
+        mate = find_mate<CHA::FULL,CHA::ANY>(pos, search, 0, false);
 
         // If mate was found or the search was not interrupted, we can conclude
         if (mate >= 0 || !search.is_interrupted() || search.is_limit_reached())
@@ -331,16 +310,9 @@ namespace {
 
     // Always print unwinnable or interrupted, possibly winnable
     if (mate < 0 || !skipWinnable)
-      search.print_result(mate);
+      search.print_result();
 
-    if (mate >= 0)
-      return WINNABLE;
-
-    else if (search.is_unwinnable())
-      return UNWINNABLE;
-
-    else
-      return INTERRUPTED;
+    return search.get_result();
   }
 
   // We expect input commands to be a line of text containing a FEN followed by the intended winner

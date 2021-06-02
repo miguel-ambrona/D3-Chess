@@ -18,6 +18,11 @@
 
 namespace CHA {
 
+  enum SearchResult { WINNABLE, UNWINNABLE, UNDETERMINED };
+
+  enum SearchMode   { FULL, QUICK };
+  enum SearchTarget { ANY, SHORTEST };
+
   constexpr int MAX_VARIATION_LENGTH = 2000;
 
   // Search class stores information relative to the helpmate search
@@ -37,28 +42,30 @@ namespace CHA {
     Depth max_depth() const;
 
     void annotate_move(Move m);
-    void interrupt();
-    void set_unwinnable();
     void step();
     void undo_step();
+    void set_winnable();
+    void set_unwinnable();
+    void interrupt();
 
     bool is_interrupted() const;
-    bool is_unwinnable() const;
     bool is_local_limit_reached() const;
     bool is_limit_reached() const;
-    uint64_t get_counter() const;
-    uint64_t get_total_counter() const;
 
-    void print_result(int mateLen) const;
+    SearchResult get_result () const;
+
+    void print_result() const;
 
   private:
     // Data members
     Move checkmateSequence[MAX_VARIATION_LENGTH];
     Color winner;
+
     Depth depth;
     Depth maxSearchDepth;
+    Depth mateLen;
+    SearchResult result;
     bool interrupted;
-    bool unwinnable;
     uint64_t counter;
     uint64_t totalCounter;
     uint64_t localLimit;
@@ -73,8 +80,9 @@ namespace CHA {
   inline void Search::set(Depth maxDepth, uint64_t localNodesLimit){
     depth = 0;
     maxSearchDepth = maxDepth;
+    mateLen = 0;
+    result = UNDETERMINED;
     interrupted = false;
-    unwinnable = false;
     localLimit = localNodesLimit;
     totalCounter += counter;
     counter = 0;
@@ -105,14 +113,6 @@ namespace CHA {
       checkmateSequence[depth] = m;
   }
 
-  inline void Search::interrupt() {
-    interrupted = true;
-  }
-
-  inline void Search::set_unwinnable() {
-    unwinnable = true;
-  }
-
   inline void Search::step() {
     counter++;
     depth++;
@@ -122,12 +122,21 @@ namespace CHA {
     depth--;
   }
 
-  inline bool Search::is_interrupted() const {
-    return interrupted;
+  inline void Search::set_winnable() {
+    result = WINNABLE;
+    mateLen = depth;
   }
 
-  inline bool Search::is_unwinnable() const {
-    return unwinnable;
+  inline void Search::set_unwinnable() {
+    result = UNWINNABLE;
+  }
+
+  inline void Search::interrupt() {
+    interrupted = true;
+  }
+
+  inline bool Search::is_interrupted() const {
+    return interrupted;
   }
 
   inline bool Search::is_local_limit_reached() const {
@@ -138,12 +147,8 @@ namespace CHA {
     return totalCounter > globalLimit;
   }
 
-  inline uint64_t Search::get_counter() const {
-    return counter;
-  }
-
-  inline uint64_t Search::get_total_counter() const {
-    return totalCounter;
+  inline SearchResult Search::get_result() const {
+    return result;
   }
 
   void loop(int argc, char* argv[]);
