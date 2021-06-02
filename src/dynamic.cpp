@@ -208,20 +208,14 @@ namespace {
 
       VariationType variation = NORMAL;
 
-      if (TARGET != SHORTEST)
+      if (TARGET == ANY)
       {
         PieceType movedPiece = type_of(pos.moved_piece(m));
         Square target = set_target(pos, movedPiece, winner);
 
         if (isWinnersTurn)
         {
-          if (pos.advanced_pawn_push(m))
-            variation = REWARD;
-
-          if (pos.capture(m))
-            variation = REWARD;
-
-          if (going_to_square(m, target, movedPiece))
+          if (pos.advanced_pawn_push(m) || pos.capture(m) || going_to_square(m, target, movedPiece))
             variation = REWARD;
         }
 
@@ -248,21 +242,30 @@ namespace {
       StateInfo st;
       pos.do_move(m, st);
 
-      // Do not reward any variations while Loser has queen(s) if it was their turn
-      if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
-        variation = (variation = REWARD) ? NORMAL : variation;
-
       Depth newDepth = depth + 1;
 
-      if (variation == REWARD)
-        newDepth--;
+      if (TARGET == ANY)
+      {
+        // Do not reward any variations while Loser has queen(s) if it was their turn
+        if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
+          variation = (variation = REWARD) ? NORMAL : variation;
 
-      else if (variation == PUNISH)
-        newDepth = std::min(search.max_depth(), newDepth + 2);
+        switch (variation) {
+          case REWARD:
+            newDepth --;
+            break;
 
-      // If the previous player made some progress, reward this
-      else if (pastProgress)
-        newDepth--;
+          case PUNISH:
+            newDepth = std::min(search.max_depth(), newDepth + 2);
+            break;
+
+          default:
+            // If the previous player made some progress, reward this
+            if (pastProgress)
+              newDepth--;
+        }
+
+      }
 
       // Continue the search from the new position
       search.annotate_move(m);
