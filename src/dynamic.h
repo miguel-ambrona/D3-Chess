@@ -52,7 +52,8 @@ namespace CHA {
     bool is_local_limit_reached() const;
     bool is_limit_reached() const;
 
-    SearchResult get_result () const;
+    SearchResult get_result() const;
+    uint64_t get_limit() const;
 
     void print_result() const;
 
@@ -149,6 +150,10 @@ namespace CHA {
 
   inline SearchResult Search::get_result() const {
     return result;
+  }
+
+  inline uint64_t Search::get_limit() const {
+    return globalLimit;
   }
 
   void loop(int argc, char* argv[]);

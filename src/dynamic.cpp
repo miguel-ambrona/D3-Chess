@@ -249,8 +249,7 @@ namespace {
       //else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
       //  search.set_unwinnable();
 
-
-  CHA::SearchResult analyze(Position& pos, CHA::Search& search, bool skipWinnable) {
+  CHA::SearchResult full_analyze(Position& pos, CHA::Search& search) {
 
     bool mate;
     search.init();
@@ -276,18 +275,65 @@ namespace {
         search.set(maxDepth, 10000); // Set local limit to 10000, empirically good
         mate = find_mate<CHA::FULL,CHA::ANY>(pos, search, 0, false);
 
-        // If mate was found or the search was not interrupted, we can conclude
-        if (mate || !search.is_interrupted() || search.is_limit_reached())
+        if (!search.is_interrupted() && !mate)
+          search.set_unwinnable();
+
+        if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
           break;
       }
+    }
+
+    return search.get_result();
+  }
+
+  CHA::SearchResult quick_analyze(Position& pos, CHA::Search& search) {
+
+    bool mate;
+    search.init();
+    search.set_limit(2000);
+
+    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
+    {
+      search.set(maxDepth, 1000);
+      mate = find_mate<CHA::QUICK,CHA::ANY>(pos, search, 0, false);
+
+      if (!search.is_interrupted() && !mate)
+        search.set_unwinnable();
+
+      if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
+        break;
     }
 
     if (!search.is_interrupted() && !mate)
       search.set_unwinnable();
 
-    // Always print unwinnable or interrupted, possibly winnable
-    if (!mate || !skipWinnable)
-      search.print_result();
+    if (search.get_result() == CHA::UNDETERMINED)
+      if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+        search.set_unwinnable();
+
+    return search.get_result();
+  }
+
+  CHA::SearchResult find_shortest(Position& pos, CHA::Search& search) {
+
+    bool mate;
+    search.init();
+
+    if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+      search.set_unwinnable();
+
+    TT.clear();
+    for (int depth = 2; depth <= 1000; depth++)
+    {
+      search.set(depth, search.get_limit());
+      mate = find_mate<CHA::FULL,CHA::SHORTEST>(pos, search, 0, false);
+
+      if (!search.is_interrupted() && !mate)
+        search.set_unwinnable();
+
+      if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
+        break;
+    }
 
     return search.get_result();
   }
@@ -347,7 +393,7 @@ void CHA::loop(int argc, char* argv[]) {
   StateListPtr states(new std::deque<StateInfo>(1));
   bool runningTests = false;
   bool skipWinnable = false;
-  bool searchMinimum = false;
+  bool findShortest = false;
   bool quickAnalysis = false;
   uint64_t globalLimit = 500000;
 
@@ -359,11 +405,10 @@ void CHA::loop(int argc, char* argv[]) {
       skipWinnable = true;
 
     if (std::string(argv[i]) == "-min")
-      searchMinimum = true;
+      findShortest = true;
 
-    if (std::string(argv[i]) == "-quick"){
+    if (std::string(argv[i]) == "-quick")
       quickAnalysis = true;
-    }
 
     if (std::string(argv[i]) == "-limit"){
       std::istringstream iss(argv[i+1]);
@@ -382,23 +427,30 @@ void CHA::loop(int argc, char* argv[]) {
       break;
 
     SearchResult result;
-    Color intendedWinner = parse_line(pos, &states->back(), line);
-    search.set_winner(intendedWinner);
+    Color winner = parse_line(pos, &states->back(), line);
+    search.set_winner(winner);
 
     auto start = std::chrono::high_resolution_clock::now();
 
+    if (findShortest)
+      result = find_shortest(pos, search);
+
     if (quickAnalysis)
-      result = analyze(pos, search, skipWinnable);
+      result = quick_analyze(pos, search);
 
     else
-      result = analyze(pos, search, skipWinnable);
+      result = full_analyze(pos, search);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-    if ((!skipWinnable || result != WINNABLE) && (!quickAnalysis || result == UNWINNABLE))
+    // On quick mode, we only print [unwinnable] ([undetermined] are all guessed to be [winnable])
+    // On full mode, we print all cases except possibly [winnable].
+    if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
+    {
+      search.print_result();
       std::cout << " time " << 12 << " (" << line << ")" << std::endl;
-
+    }
   }
 
   Threads.stop = true;
