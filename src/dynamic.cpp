@@ -326,7 +326,7 @@ namespace {
       search.set_unwinnable();
 
     TT.clear();
-    for (int depth = 2; depth <= 1000; depth++)
+    for (int depth = 1; depth <= 1000; depth++)
     {
       search.set(depth, search.get_limit());
       mate = find_mate<CHA::FULL,CHA::SHORTEST>(pos, search, 0, false);
@@ -381,7 +381,7 @@ void CHA::Search::print_result() const {
     std::cout << "unwinnable";
 
   else
-    std::cout << "interrupted";
+    std::cout << "undetermined";
 
   std::cout << " nodes " << (totalCounter + counter);
 }
@@ -401,8 +401,10 @@ void CHA::loop(int argc, char* argv[]) {
   uint64_t globalLimit = 500000;
 
   for (int i = 1; i < argc; ++i){
-    if (std::string(argv[i]) == "test")
+    if (std::string(argv[i]) == "test"){
       runningTests = true;
+      quickAnalysis = true;
+    }
 
     if (std::string(argv[i]) == "-u")
       skipWinnable = true;
@@ -438,7 +440,7 @@ void CHA::loop(int argc, char* argv[]) {
     if (findShortest)
       result = find_shortest(pos, search);
 
-    if (quickAnalysis)
+    else if (quickAnalysis)
       result = quick_analyze(pos, search);
 
     else

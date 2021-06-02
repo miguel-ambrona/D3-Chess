@@ -21,4 +21,4 @@ jobs:
       run: make
     - name: test
       working-directory: ./src
-      run: ./cha test -quick
+      run: ./cha test
