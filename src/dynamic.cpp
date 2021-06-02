@@ -24,26 +24,6 @@
 #include "semistatic.h"
 #include "dynamic.h"
 
-void CHA::Search::print_result() const {
-
-  // This function should only be called when the search has been completed
-
-  if (result == WINNABLE){
-    std::cout << "winnable";
-    for (int i = 0; i < std::min(mateLen, MAX_VARIATION_LENGTH); i++)
-      std::cout << " " << UCI::move(checkmateSequence[i], false);
-    std::cout << "#";
-  }
-
-  else if (result == UNWINNABLE)
-    std::cout << "unwinnable";
-
-  else
-    std::cout << "interrupted";
-
-  std::cout << " nodes " << (totalCounter + counter);
-}
-
 namespace {
 
   // We will reward variations that make pieces closer to a mating position in a corner.
@@ -156,7 +136,7 @@ namespace {
   // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
 
   template <CHA::SearchMode MODE, CHA::SearchTarget TARGET>
-  int find_mate(Position& pos, CHA::Search& search, Depth depth, bool pastProgress){
+  bool find_mate(Position& pos, CHA::Search& search, Depth depth, bool pastProgress){
 
     Color winner = search.intended_winner();
     Color loser = ~winner;
@@ -171,24 +151,24 @@ namespace {
       // If the position is found in TT with more depth, we can safetly ignore this branch
       tte = TT.probe(pos.key(), found);
       if (found && (tte->depth() >= movesLeft))
-        return -1;
+        return false;
     }
 
     // Insufficient material to win
     if (impossible_to_win(pos, winner))
-      return -1;
+      return false;
 
     // Checkmate!
     if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() == loser){
       search.set_winnable();
-      return 0;
+      return true;
     }
 
     // Search limits
     if (depth >= search.max_depth() || search.is_local_limit_reached())
     {
       search.interrupt();
-      return -1;
+      return false;
     }
 
     // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
@@ -257,12 +237,12 @@ namespace {
       search.undo_step();
       pos.undo_move(m);
 
-      if (checkMate >= 0)
-        return checkMate + 1;
+      if (checkMate)
+        return true;
 
     } // end of iteration over legal moves
 
-    return -1;
+    return false;
   }
 
       // Careful, this function modifies the position, we only want it for extreme completeness:
@@ -272,44 +252,41 @@ namespace {
 
   CHA::SearchResult analyze(Position& pos, CHA::Search& search, bool skipWinnable) {
 
-    int mate;
+    bool mate;
     search.init();
 
     // Apply a quick search of depth 2 (may be deeper on rewarded variations)
     search.set(2, 5000);
     mate = find_mate<CHA::QUICK,CHA::ANY>(pos, search, 0, false);
 
-    // The search was not interrupted, but not mate was found -> unwinnable.
-    if (!search.is_interrupted() && mate < 0)
+    if (!search.is_interrupted() && !mate)
       search.set_unwinnable();
 
     if (search.get_result() == CHA::UNDETERMINED)
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         search.set_unwinnable();
 
-    // No mate was found but not declared unwinnable, perform the full search
     if (search.get_result() == CHA::UNDETERMINED)
     {
-      // Clearing the TT takes significant time, that is why we did not do it before
       TT.clear();
 
       // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
       for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
       {
-        search.set(maxDepth, 10000);
+        search.set(maxDepth, 10000); // Set local limit to 10000, empirically good
         mate = find_mate<CHA::FULL,CHA::ANY>(pos, search, 0, false);
 
         // If mate was found or the search was not interrupted, we can conclude
-        if (mate >= 0 || !search.is_interrupted() || search.is_limit_reached())
+        if (mate || !search.is_interrupted() || search.is_limit_reached())
           break;
       }
     }
 
-    if (!search.is_interrupted() && mate < 0)
+    if (!search.is_interrupted() && !mate)
       search.set_unwinnable();
 
     // Always print unwinnable or interrupted, possibly winnable
-    if (mate < 0 || !skipWinnable)
+    if (!mate || !skipWinnable)
       search.print_result();
 
     return search.get_result();
@@ -340,6 +317,25 @@ namespace {
 
 } // namespace
 
+// CHA::print_result() shows prints one line of information about the search.
+
+void CHA::Search::print_result() const {
+
+  if (result == WINNABLE){
+    std::cout << "winnable";
+    for (int i = 0; i < std::min(mateLen, MAX_VARIATION_LENGTH); i++)
+      std::cout << " " << UCI::move(checkmateSequence[i], false);
+    std::cout << "#";
+  }
+
+  else if (result == UNWINNABLE)
+    std::cout << "unwinnable";
+
+  else
+    std::cout << "interrupted";
+
+  std::cout << " nodes " << (totalCounter + counter);
+}
 
 /// CHA::loop() waits for a command from stdin or the tests file and analyzes it.
 
@@ -351,7 +347,7 @@ void CHA::loop(int argc, char* argv[]) {
   StateListPtr states(new std::deque<StateInfo>(1));
   bool runningTests = false;
   bool skipWinnable = false;
-  bool allowTricks = true;
+  bool searchMinimum = false;
   bool quickAnalysis = false;
   uint64_t globalLimit = 500000;
 
@@ -363,7 +359,7 @@ void CHA::loop(int argc, char* argv[]) {
       skipWinnable = true;
 
     if (std::string(argv[i]) == "-min")
-      allowTricks = false;
+      searchMinimum = true;
 
     if (std::string(argv[i]) == "-quick"){
       quickAnalysis = true;
@@ -375,31 +371,27 @@ void CHA::loop(int argc, char* argv[]) {
     }
   }
 
-  // If searching for the minimum helpmate, disable 'quickAnalysis'
-  if (!allowTricks)
-    quickAnalysis = false;
-
   static CHA::Search search = CHA::Search();
   search.set_limit(globalLimit);
 
   std::ifstream infile("../tests/lichess-30K-games.txt");
 
-  int i = 0;
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
 
     if (line == "quit")
       break;
 
-    i++;
-    if (i % 3000 == 0 && runningTests)
-      std::cout << i << std::endl;
-
+    SearchResult result;
     Color intendedWinner = parse_line(pos, &states->back(), line);
     search.set_winner(intendedWinner);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    SearchResult result = analyze(pos, search, skipWinnable);
+    if (quickAnalysis)
+      result = analyze(pos, search, skipWinnable);
+
+    else
+      result = analyze(pos, search, skipWinnable);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
