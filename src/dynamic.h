@@ -27,9 +27,9 @@ namespace CHA {
     Search() = default;
 
     void init();
-    void set(Depth maxDepth);
+    void set(Depth maxDepth, uint64_t localNodesLimit);
 
-    void set_limit(uint64_t local, uint64_t global);
+    void set_limit(uint64_t nodesLimit);
     void set_winner(Color intendedWinner);
 
     Color intended_winner() const;
@@ -44,8 +44,8 @@ namespace CHA {
 
     bool is_interrupted() const;
     bool is_unwinnable() const;
+    bool is_local_limit_reached() const;
     bool is_limit_reached() const;
-    bool is_global_limit_reached() const;
     uint64_t get_counter() const;
     uint64_t get_total_counter() const;
 
@@ -70,18 +70,18 @@ namespace CHA {
     counter = 0;
   }
 
-  inline void Search::set(Depth maxDepth){
+  inline void Search::set(Depth maxDepth, uint64_t localNodesLimit){
     depth = 0;
     maxSearchDepth = maxDepth;
     interrupted = false;
     unwinnable = false;
+    localLimit = localNodesLimit;
     totalCounter += counter;
     counter = 0;
   }
 
-  inline void Search::set_limit(uint64_t local, uint64_t global) {
-    localLimit = local;
-    globalLimit = global;
+  inline void Search::set_limit(uint64_t nodesLimit) {
+    globalLimit = nodesLimit;
   }
 
   inline void Search::set_winner(Color intendedWinner) {
@@ -130,11 +130,11 @@ namespace CHA {
     return unwinnable;
   }
 
-  inline bool Search::is_limit_reached() const {
+  inline bool Search::is_local_limit_reached() const {
     return counter > maxSearchDepth * localLimit;
   }
 
-  inline bool Search::is_global_limit_reached() const {
+  inline bool Search::is_limit_reached() const {
     return totalCounter > globalLimit;
   }
 

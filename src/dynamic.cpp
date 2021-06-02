@@ -26,6 +26,8 @@
 
 enum SearchResult { WINNABLE, UNWINNABLE, INTERRUPTED };
 
+enum SearchSpeed { FULL, QUICK };
+
 void CHA::Search::print_result(int mateLen) const {
 
   // This function should only be called when the search has been completed
@@ -184,7 +186,7 @@ namespace {
       return 0;
 
     // Search limits
-    if (depth >= search.max_depth() || search.get_counter() > (uint64_t) (search.max_depth() * 100000))//search.is_limit_reached())
+    if (depth >= search.max_depth() || search.is_local_limit_reached())
     {
       search.interrupt();
       return -1;
@@ -291,15 +293,15 @@ namespace {
     //bool allowTricks = true;//parameters & 2;
 
     // Apply a quick search of depth 2 (may be deeper on rewarded variations)
-    search.set(2);
+    search.set(2, 5000);
     mate = find_mate(pos, 0, search, false, false);
 
     // The search was not interrupted, but not mate was found -> unwinnable.
     if (!search.is_interrupted() && mate < 0)
       search.set_unwinnable();
 
-    // If the search was interrupted, analyze with semistatic
-    if (search.is_interrupted())
+    // If no mate was found, but not declared unwinnable, analyze with semistatic
+    if (mate < 0 && !search.is_unwinnable())
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         search.set_unwinnable();
 
@@ -312,11 +314,11 @@ namespace {
       // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
       for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
       {
-        search.set(maxDepth);
+        search.set(maxDepth, 10000);
         mate = find_mate(pos, 0, search, false, true);
 
         // If mate was found or the search was not interrupted, we can conclude
-        if (mate >= 0 || !search.is_interrupted() || (search.get_total_counter() > (uint64_t) 500000))//search.is_global_limit_reached())
+        if (mate >= 0 || !search.is_interrupted() || search.is_limit_reached())
           break;
       }
     }
@@ -376,8 +378,6 @@ void CHA::loop(int argc, char* argv[]) {
   bool skipWinnable = false;
   bool allowTricks = true;
   bool quickAnalysis = false;
-
-  uint64_t localLimit = 100000;
   uint64_t globalLimit = 500000;
 
   for (int i = 1; i < argc; ++i){
@@ -392,7 +392,6 @@ void CHA::loop(int argc, char* argv[]) {
 
     if (std::string(argv[i]) == "-quick"){
       quickAnalysis = true;
-      localLimit = 2000;
     }
 
     if (std::string(argv[i]) == "-limit"){
@@ -406,7 +405,7 @@ void CHA::loop(int argc, char* argv[]) {
     quickAnalysis = false;
 
   static CHA::Search search = CHA::Search();
-  search.set_limit(localLimit, globalLimit);
+  search.set_limit(globalLimit);
 
   std::ifstream infile("../tests/lichess-30K-games.txt");
 
