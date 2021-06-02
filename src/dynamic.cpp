@@ -245,10 +245,6 @@ namespace {
     return false;
   }
 
-      // Careful, this function modifies the position, we only want it for extreme completeness:
-      //else if (SemiStatic::is_unwinnable_after_one_move(pos, intendedWinner))
-      //  search.set_unwinnable();
-
   CHA::SearchResult full_analyze(Position& pos, CHA::Search& search) {
 
     bool mate;
@@ -282,6 +278,13 @@ namespace {
           break;
       }
     }
+
+    // Careful, the following function modifies the position, we want it for extreme completeness:
+    // TODO: Improve it to arbitrary depth (not just one). Are there examples where more than
+    //       depth 1 will be needed?
+    if (search.get_result() == CHA::UNDETERMINED)
+      if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
+        search.set_unwinnable();
 
     return search.get_result();
   }
@@ -449,7 +452,7 @@ void CHA::loop(int argc, char* argv[]) {
     if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
     {
       search.print_result();
-      std::cout << " time " << 12 << " (" << line << ")" << std::endl;
+      std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
     }
   }
 
