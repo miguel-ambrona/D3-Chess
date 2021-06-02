@@ -26,7 +26,8 @@
 
 enum SearchResult { WINNABLE, UNWINNABLE, INTERRUPTED };
 
-enum SearchSpeed { FULL, QUICK };
+enum SearchMode   { FULL, QUICK };
+enum SearchTarget { ANY, SHORTEST };
 
 void CHA::Search::print_result(int mateLen) const {
 
@@ -159,7 +160,8 @@ namespace {
   // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
   // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
 
-  int find_mate(Position& pos, Depth depth, CHA::Search& search, bool pastProgress, bool useTT){
+  template <SearchMode MODE, SearchTarget TARGET>
+  int find_mate(Position& pos, CHA::Search& search, Depth depth, bool pastProgress){
 
     Color winner = search.intended_winner();
     Color loser = ~winner;
@@ -169,7 +171,7 @@ namespace {
     bool found;
     Depth movesLeft = search.max_depth() - depth;
 
-    if (useTT)
+    if (MODE == FULL)
     {
       // If the position is found in TT with more depth, we can safetly ignore this branch
       tte = TT.probe(pos.key(), found);
@@ -193,7 +195,7 @@ namespace {
     }
 
     // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
-    if (useTT)
+    if (MODE == FULL)
       tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE, VALUE_NONE);
 
     // Check if Loser has to promote a piece, because Winner has not enough material
@@ -204,38 +206,42 @@ namespace {
     for (const ExtMove& m : MoveList<LEGAL>(pos))
     {
 
-      PieceType movedPiece = type_of(pos.moved_piece(m));
       VariationType variation = NORMAL;
 
-      Square target = set_target(pos, movedPiece, winner);
-
-      if (isWinnersTurn)
+      if (TARGET != SHORTEST)
       {
-        if (pos.advanced_pawn_push(m))
-          variation = REWARD;
+        PieceType movedPiece = type_of(pos.moved_piece(m));
+        Square target = set_target(pos, movedPiece, winner);
 
-        if (pos.capture(m))
-          variation = REWARD;
-
-        if (going_to_square(m, target, movedPiece))
-          variation = REWARD;
-      }
-
-      else
-      {
-        if (needLoserPromotion)
+        if (isWinnersTurn)
         {
-          PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
-          bool heavyPromotion = promoted == QUEEN || promoted == ROOK;// || promoted == BISHOP;
+          if (pos.advanced_pawn_push(m))
+            variation = REWARD;
 
-          variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
+          if (pos.capture(m))
+            variation = REWARD;
+
+          if (going_to_square(m, target, movedPiece))
+            variation = REWARD;
         }
 
-        if (going_to_square(m, target, movedPiece))
-          variation = REWARD;
+        else
+        {
+          if (needLoserPromotion)
+          {
+            PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
+            bool heavyPromotion = promoted == QUEEN || promoted == ROOK;// || promoted == BISHOP;
 
-        if (pos.capture(m))
-          variation = PUNISH;
+            variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
+          }
+
+          if (going_to_square(m, target, movedPiece))
+            variation = REWARD;
+
+          if (pos.capture(m))
+            variation = PUNISH;
+        }
+
       }
 
       // Apply the move
@@ -247,9 +253,6 @@ namespace {
         variation = (variation = REWARD) ? NORMAL : variation;
 
       Depth newDepth = depth + 1;
-
-      //if (!tricks)
-      //  variation = NORMAL;
 
       if (variation == REWARD)
         newDepth--;
@@ -264,7 +267,7 @@ namespace {
       // Continue the search from the new position
       search.annotate_move(m);
       search.step();
-      int checkMate = find_mate(pos, newDepth, search, variation == REWARD, useTT);
+      int checkMate = find_mate<MODE,TARGET>(pos, search, newDepth, variation == REWARD);
       search.undo_step();
       pos.undo_move(m);
 
@@ -284,17 +287,14 @@ namespace {
       //  search.set_unwinnable();
 
 
-  SearchResult analyze(Position& pos, CHA::Search& search) {
+  SearchResult analyze(Position& pos, CHA::Search& search, bool skipWinnable) {
 
     int mate;
     search.init();
 
-    bool skipWinnable = true;//parameters & 1;
-    //bool allowTricks = true;//parameters & 2;
-
     // Apply a quick search of depth 2 (may be deeper on rewarded variations)
     search.set(2, 5000);
-    mate = find_mate(pos, 0, search, false, false);
+    mate = find_mate<QUICK,ANY>(pos, search, 0, false);
 
     // The search was not interrupted, but not mate was found -> unwinnable.
     if (!search.is_interrupted() && mate < 0)
@@ -315,7 +315,7 @@ namespace {
       for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
       {
         search.set(maxDepth, 10000);
-        mate = find_mate(pos, 0, search, false, true);
+        mate = find_mate<FULL,ANY>(pos, search, 0, false);
 
         // If mate was found or the search was not interrupted, we can conclude
         if (mate >= 0 || !search.is_interrupted() || search.is_limit_reached())
@@ -422,11 +422,9 @@ void CHA::loop(int argc, char* argv[]) {
     Color intendedWinner = parse_line(pos, &states->back(), line);
     search.set_winner(intendedWinner);
 
-    //    int parameters =  skipWinnable + (allowTricks << 1) + (quickAnalysis << 2);
-
     auto start = std::chrono::high_resolution_clock::now();
 
-    SearchResult result = analyze(pos, search); //intendedWinner, parameters, searchLimit);
+    SearchResult result = analyze(pos, search, skipWinnable);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
