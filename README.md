@@ -89,16 +89,17 @@ On every query, CHA will produce one line output including:
 
 For example:
 
-> ./cha<br>
+> **./cha**<br>
 > Chess Unwinnability Analyzer (CHA) version 2.2<br>
-> Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -<br>
+> **Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -**<br>
 > winnable e8d8 b7a6 d8e8 a8b7 e8d8 b7c8 d8e8 c8d7 e8d8 d7e8 d8c8 g4g5 c8d8 e8f7 d8c8 f7g8 c8d8 a6b7 d8e8 b7c8 a5a4 g8f7# nodes 5055 time 5717 (Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -)<br>
-> 7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black<br>
+> **7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black**<br>
 > unwinnable nodes 10101 time 1302 (7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black)
 
 There are a few of options you may choose when calling ./cha:
 
 * ```-u``` will only show an output on (u)nwinnable positions, ignoring all winnable.
+(Undetermined cases are also displayed if any.)
 
 * ```-quick``` will perform a quick analysis trying to prove that the position is unwinnable,
 only producing an output if so is the case.
@@ -110,9 +111,9 @@ optimizations). This can be used for solving helpmate problems.
 
 Other examples:
 
-> ./cha -min -limit 1000000<br>
+> **./cha -min -limit 1000000**<br>
 > Chess Unwinnability Analyzer (CHA) version 2.2<br>
-> 8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white<br>
+> **8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white**<br>
 > winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 705679 time 155008 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
 
 Enjoy!
