@@ -426,9 +426,9 @@ void CHA::loop(int argc, char* argv[]) {
 
   std::ifstream infile("../tests/lichess-30K-games.txt");
 
-  auto totalPuzzles = 0;
-  auto totalTime = 0;
-  auto maxTime = 0;
+  uint64_t totalPuzzles = 0;
+  uint64_t totalTime = 0;
+  uint64_t maxTime = 0;
 
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
 
@@ -451,23 +451,24 @@ void CHA::loop(int argc, char* argv[]) {
       result = full_analyze(pos, search);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto diff = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    uint64_t duration = diff.count();
 
     // On quick mode, we only print [unwinnable] ([undetermined] are all guessed to be [winnable])
     // On full mode, we print all cases except possibly [winnable].
     if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
     {
       search.print_result();
-      std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
+      std::cout << " time " << duration << " (" << line << ")" << std::endl;
     }
 
-    if (duration.count() > 100000)
+    if (duration > 100000)
       std::cout << line << pos;
 
     totalPuzzles++;
-    totalTime += duration.count();
-    if (duration.count() > maxTime)
-      maxTime = duration.count();
+    totalTime += duration;
+    if (duration > maxTime)
+      maxTime = duration;
   }
 
   std::cout << "Analyzed " << totalPuzzles << " positions in " << totalTime/1000 << " ms "
