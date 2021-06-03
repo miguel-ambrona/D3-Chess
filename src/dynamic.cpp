@@ -426,6 +426,10 @@ void CHA::loop(int argc, char* argv[]) {
 
   std::ifstream infile("../tests/lichess-30K-games.txt");
 
+  auto totalPuzzles = 0;
+  auto totalTime = 0;
+  auto maxTime = 0;
+
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
 
     if (line == "quit")
@@ -456,7 +460,18 @@ void CHA::loop(int argc, char* argv[]) {
       search.print_result();
       std::cout << " time " << duration.count() << " (" << line << ")" << std::endl;
     }
+
+    if (duration.count() > 100000)
+      std::cout << line << pos;
+
+    totalPuzzles++;
+    totalTime += duration.count();
+    if (duration.count() > maxTime)
+      maxTime = duration.count();
   }
+
+  std::cout << "Analyzed " << totalPuzzles << " positions in " << totalTime/1000 << " ms "
+            << "(avg: " << totalTime/totalPuzzles << " us; max: " << maxTime << " us)" << std::endl;
 
   Threads.stop = true;
 }
