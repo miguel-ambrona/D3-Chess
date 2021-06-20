@@ -113,18 +113,6 @@ namespace {
     return popcount(pos.pieces(~winner, PAWN)) == 0 && need_loser_promotion(pos, winner);
   }
 
-  inline bool plenty_of_material(int material){
-    return material >= 7*BishopValueMg;
-  }
-
-  inline bool little_material(int material){
-    return material <= 3*BishopValueMg;
-  }
-
-  inline bool critical_material(int material){
-    return material <= BishopValueEg;
-  }
-
   // Type to classify variations in the search performed in 'find_mate', the search will be deeper
   // in REWARDed variations and shorter in PUNISHed ones.
 
@@ -293,7 +281,7 @@ namespace {
 
     bool mate;
     search.init();
-    search.set_limit(2000);
+    search.set_limit(3000);
 
     for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
     {
