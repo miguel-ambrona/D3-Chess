@@ -32,36 +32,56 @@ for more details about the problem of correctly applying Article 6.9 and to know
 
 ## This tool
 
-CHA 2 can decide unwinnability in *all chess positions* and is *efficient* enough
+CHA can decide unwinnability in *all chess positions* and is *efficient* enough
 to be used by chess servers with a minimal computational overhead.
 
- * CHA 2 is designed to be *sound*, this means that (ignoring possible implementation bugs)
- *CHA 2 will never declare a position as "unwinnable" if the position is indeed winnable*.
+ * CHA is designed to be *sound*, this means that (ignoring possible implementation bugs)
+ *CHA will never declare a position as "unwinnable" if the position is indeed winnable*.
 
- * CHA 2 is also *complete* (if run without a depth limit), this means that it will always find
+ * CHA is also *complete* (if run without a depth limit), this means that it will always find
  a helpmate sequence if it exists.
- CHA performs extermelly well in real games, but artificially designed positions can
+ CHA performs extremely well in real games, but artificially designed positions can
  potentially make the analysis reach the default search limit.
  I challenge you to find a position like this!
 
-## Tests
+## Results
 
-Running CHA 2.0 on the final position of a test set of 5 million games from the
-[Lichess game database](https://database.lichess.org/)
-(that were won on time by one of the players) led to identifying
-[321 of them](https://github.com/miguel-ambrona/D3-Chess/blob/main/tests/unfair.txt)
-which were unfairly classified (they should have ended in a draw).
-The tool required an average of 296 μs per position (and never more than 4 ms)
-running on a personal laptop, with processor Intel Core i7 of 10th generation.
+We have evaluated CHA 2 over the entire [Lichess database](https://database.lichess.org/)
+of standard rated games, which includes 2,274,080,505 games at the moment.
+More concretely, we have applied CHA to the final position of all games that ended in a timeout
+and that were classified as 1-0 or 0-1.
+This represents a total of 720,668,263 games (about 31% of all games) which have been analyzed
+in about 65 hours of CPU time (325 μs per position on average).
 
-<img src="https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/d739f88c7e134a62f3df29248651223f2496cd13/tests/results.svg">
+Our analysis led to identifying a total of
+[64,181](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+games that were unfairly classified.
+Namely, games that were lost by the player who ran out of time, but their opponent
+could not have checkmated them by any possible sequence of legal moves.
 
-Observe that *over 99.92% of the positions were analyzed in less than 1.5 ms*.
-These numbers make it completely feasible for an online chess server to run this test on every
-game that ends in a timeout. Or even after every single move during the game, to end the
-game immediately if a
-[dead draw](https://en.wikipedia.org/wiki/Rules_of_chess#Dead_position)
-is detected (rigorously applying Article 6.9 of the FIDE Laws of Chess).
+## Full vs Quick version of CHA
+
+In order to minimize the computational impact of running CHA, we propose a less complete,
+but faster version of our algorithm. Our quick version may terminate without having found
+a helpmate sequence in complex positions, declaring them as "probably winnable".
+Consequently, the quick version may fail to find all unwinnable positions.
+In fact, out of the exact 64,181 games that were unfairly classified
+(identified with the full version of CHA), the quick version can identify 64,112 of them.
+
+Below, we present a comparison of the performance of the two versions of CHA when analyzing
+all the timeouts from May 2021. All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
+running Ubuntu 18.04 LTS.
+
+|                                 |    Full CHA   |    Quick CHA   |
+|--------------------------------:|:-------------:|:--------------:|
+|       Average time per position |     340 μs    |     140 μs     |
+|   Average #positions per second |      2930     |      7120      |
+|   Positions evaluated in < 2 ms |     96.80%    |     99.97%     |
+|       Maximum time per position |     195 ms    |     6.3 ms     |
+| Unwinnable positions identified |  2383 (100%)  |  2381 (99.91%) |
+|            Total execution time |   2 h 58 min  |    1 h 13 min  |
+
+<img src="https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/1e7665e8ad7783765b2149c8db70821ce8fe54f3/tests/results.svg">
 
 
 ## Installation & Usage
