@@ -26,7 +26,7 @@ Which in shorter English would read as:
 This is a (relatively unknown) generalization of the folklore rule that says that when you
 just have the king, you cannot win anymore, not even on the clock.
 
-See [this page](https://elrubiongamma.ddns.net/chess-helpmate-analyzer/about.html)
+See [this page](https://elrubiongamma.ddns.net/chess-unwinnability-analyzer/about.html)
 for more details about the problem of correctly applying Article 6.9 and to know more about this tool.
 
 
