@@ -386,6 +386,7 @@ void CHA::loop(int argc, char* argv[]) {
   bool skipWinnable = false;
   bool findShortest = false;
   bool quickAnalysis = false;
+  bool adjudicateTimeout = false;
   uint64_t globalLimit = 500000;
 
   for (int i = 1; i < argc; ++i){
@@ -402,6 +403,9 @@ void CHA::loop(int argc, char* argv[]) {
 
     if (std::string(argv[i]) == "-quick")
       quickAnalysis = true;
+
+    if (std::string(argv[i]) == "-timeout")
+      adjudicateTimeout = true;
 
     if (std::string(argv[i]) == "-limit"){
       std::istringstream iss(argv[i+1]);
@@ -442,16 +446,31 @@ void CHA::loop(int argc, char* argv[]) {
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     uint64_t duration = diff.count();
 
-    // On quick mode, we only print [unwinnable] ([undetermined] are all guessed to be [winnable])
-    // On full mode, we print all cases except possibly [winnable].
-    if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
+    if (adjudicateTimeout)
     {
-      search.print_result();
-      std::cout << " time " << duration << " (" << line << ")" << std::endl;
-    }
+      if (result == UNWINNABLE)
+        std::cout << "1/2-1/2" << std::endl;
 
-    if (duration > 100000)
-      std::cout << line << pos;
+      else if (winner == WHITE)
+        std::cout << "1-0" << std::endl;
+
+      else
+        std::cout << "0-1" << std::endl;
+    }
+    else
+    {
+      // On quick mode, we only print [unwinnable] ([undetermined] are all guessed to be [winnable])
+      // On full mode, we print all cases except possibly [winnable].
+      if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
+      {
+        search.print_result();
+        std::cout << " time " << duration << " (" << line << ")" << std::endl;
+      }
+
+      if (duration > 100000)
+        std::cout << line << pos;
+
+    }
 
     totalPuzzles++;
     totalTime += duration;
