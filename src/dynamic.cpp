@@ -302,6 +302,14 @@ namespace {
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         search.set_unwinnable();
 
+    bool onlyPawnsAndBishops = !(pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN));
+
+    // Only when it is check and there is just pawns and bishops, do we call the
+    // routine that applies semistatic after one move
+    if (pos.checkers() && onlyPawnsAndBishops && search.get_result() == CHA::UNDETERMINED)
+      if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
+        search.set_unwinnable();
+
     return search.get_result();
   }
 
