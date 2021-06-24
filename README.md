@@ -66,7 +66,7 @@ but faster version of our algorithm. Our quick version may terminate without hav
 a helpmate sequence in complex positions, declaring them as "probably winnable".
 Consequently, the quick version may fail to find all unwinnable positions.
 In fact, out of the exact 64,181 games that were unfairly classified
-(identified with the full version of CHA), the quick version can identify 64,112 of them.
+(identified with the full version of CHA), the quick version can identify 64,162 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA when analyzing
 all the timeouts from May 2021. All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
