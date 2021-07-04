@@ -54,7 +54,7 @@ This represents a total of 749,444,950 games (about 31% of all games) which have
 in about 68 hours of CPU time (325 μs per position on average).
 
 Our analysis led to identifying a total of
-[64,425](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[66,425](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their opponent
 could not have checkmated them by any possible sequence of legal moves.
@@ -65,8 +65,8 @@ In order to minimize the computational impact of running CHA, we propose a less 
 but faster version of our algorithm. Our quick version may terminate without having found
 a helpmate sequence in complex positions, declaring them as "probably winnable".
 Consequently, the quick version may fail to find all unwinnable positions.
-In fact, out of the exact 64,425 games that were unfairly classified
-(identified with the full version of CHA), the quick version can identify 64,406 of them.
+In fact, out of the exact 66,425 games that were unfairly classified
+(identified with the full version of CHA), the quick version can identify 66,406 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA when analyzing
 all the timeouts from May 2021. All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
