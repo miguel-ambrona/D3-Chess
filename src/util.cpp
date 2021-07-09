@@ -46,8 +46,8 @@ void UTIL::unmove(Square *presquares, PieceType p, Color c, Square s) {
     presquares[i] = prev;
     i++;
   }
-  if (i < 8)
-    presquares[i] = (Square) -1;
+  while (i < 8)
+    presquares[i++] = (Square) -1;
 }
 
 Bitboard UTIL::neighbours(Square s) {
