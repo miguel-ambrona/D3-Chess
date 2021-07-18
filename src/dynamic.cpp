@@ -233,6 +233,40 @@ namespace {
     return false;
   }
 
+  // It performs an exhaustive search (with many tricks) over the tree of moves, that ends as soon
+  // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
+  // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
+
+  bool dynamically_unwinnable(Position& pos, Depth depth, Color winner){
+
+    // Insufficient material to win
+    if (impossible_to_win(pos, winner))
+      return true;
+
+    // Checkmate!
+    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() != winner)
+      return true;
+
+    // Maximum depth reached
+    if (depth <= 0)
+      return false;
+
+    // Iterate over all legal moves
+    for (const ExtMove& m : MoveList<LEGAL>(pos)) {
+
+      StateInfo st;
+      pos.do_move(m, st);
+      bool unwinnable = dynamically_unwinnable(pos, depth-1, winner);
+      pos.undo_move(m);
+
+      if (!unwinnable)
+        return false;
+
+    } // end of iteration over legal moves
+
+    return true;
+  }
+
   CHA::SearchResult full_analyze(Position& pos, CHA::Search& search) {
 
     bool mate;
@@ -279,36 +313,24 @@ namespace {
 
   CHA::SearchResult quick_analyze(Position& pos, CHA::Search& search) {
 
-    bool mate;
     search.init();
-    search.set_limit(3000);
-
-    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
-    {
-      search.set(maxDepth, 1000);
-      mate = find_mate<CHA::QUICK,CHA::ANY>(pos, search, 0, false);
-
-      if (!search.is_interrupted() && !mate)
-        search.set_unwinnable();
-
-      if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
-        break;
-    }
-
-    if (!search.is_interrupted() && !mate)
-      search.set_unwinnable();
-
-    if (search.get_result() == CHA::UNDETERMINED)
-      if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
-        search.set_unwinnable();
-
+    search.set(0,0);
+    bool unwinnable;
     bool onlyPawnsAndBishops = !(pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN));
 
-    // Only when it is check and there is just pawns and bishops, do we call the
-    // routine that applies semistatic after one move
-    if (pos.checkers() && onlyPawnsAndBishops && search.get_result() == CHA::UNDETERMINED)
+    unwinnable = dynamically_unwinnable(pos, 6, search.intended_winner());
+
+    if ((onlyPawnsAndBishops) && !unwinnable)
+      if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+        unwinnable = true;
+
+    if ((onlyPawnsAndBishops && pos.checkers()) && !unwinnable)
       if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
-        search.set_unwinnable();
+        unwinnable = true;
+
+    search.init();
+    if (unwinnable)
+      search.set_unwinnable();
 
     return search.get_result();
   }
