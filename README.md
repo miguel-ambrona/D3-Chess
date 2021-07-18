@@ -69,19 +69,17 @@ In fact, out of the exact 66,425 games that were unfairly classified
 (identified with the full version of CHA), the quick version can identify 66,406 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA when analyzing
-all the timeouts from May 2021. All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
-running Ubuntu 18.04 LTS.
+all the timeouts from May 2021 (31,287,798 positions).
+All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU, running Ubuntu 18.04 LTS.
 
 |                                 |    Full CHA   |    Quick CHA   |
 |--------------------------------:|:-------------:|:--------------:|
-|       Average time per position |     340 μs    |     140 μs     |
-|   Average #positions per second |      2930     |      7120      |
-|   Positions evaluated in < 2 ms |     96.80%    |     99.97%     |
-|       Maximum time per position |     195 ms    |     6.3 ms     |
+|       Average time per position |     340 μs    |      3 μs      |
+|   Average #positions per second |      2930     |    320,000     |
+|   Positions evaluated in < 2 ms |     96.80%    |      100%      |
+|       Maximum time per position |     195 ms    |     396 μs     |
 | Unwinnable positions identified |  2383 (100%)  |  2382 (99.96%) |
-|            Total execution time |   2 h 58 min  |    1 h 13 min  |
-
-<img src="https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/1e7665e8ad7783765b2149c8db70821ce8fe54f3/tests/results.svg">
+|            Total execution time |   2 h 58 min  |    1 min 37 s  |
 
 
 ## Installation & Usage
@@ -105,16 +103,16 @@ On every query, CHA will produce one line output including:
 
 1. **nodes** _int_, the total number of positions evaluated.
 
-1. **time** _int_, the total execution time (measured in microseconds).
+1. **time** _int_, the total execution time (measured in nanoseconds).
 
 For example:
 
 > **./cha**<br>
 > Chess Unwinnability Analyzer (CHA) version 2.2<br>
 > **Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -**<br>
-> winnable e8d8 b7a6 d8e8 a8b7 e8d8 b7c8 d8e8 c8d7 e8d8 d7e8 d8c8 g4g5 c8d8 e8f7 d8c8 f7g8 c8d8 a6b7 d8e8 b7c8 a5a4 g8f7# nodes 5055 time 5717 (Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -)<br>
+> winnable e8d8 b7a6 d8e8 a8b7 e8d8 b7c8 d8e8 c8d7 e8d8 d7e8 d8c8 g4g5 c8d8 e8f7 d8c8 f7g8 c8d8 a6b7 d8e8 b7c8 a5a4 g8f7# nodes 5055 time 7604463 (Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -)<br>
 > **7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black**<br>
-> unwinnable nodes 10101 time 1302 (7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black)
+> unwinnable nodes 10101 time 7532477 (7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black)
 
 There are a few of options you may choose when calling ./cha:
 
@@ -134,7 +132,7 @@ Other examples:
 > **./cha -min -limit 1000000**<br>
 > Chess Unwinnability Analyzer (CHA) version 2.2<br>
 > **8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white**<br>
-> winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 705679 time 155008 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
+> winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 705679 time 158585135 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
 
 Enjoy!
 

@@ -21,6 +21,7 @@ namespace UTIL {
   void unmove(Square *presquares, PieceType p, Color c, Square s);
   Bitboard neighbours(Square s);
   Square find_king(Position& pos, Color c);
+  bool has_lonely_pawns(Position& pos);
 
   bool is_corner(Square s);
 

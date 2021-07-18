@@ -316,15 +316,19 @@ namespace {
     search.init();
     search.set(0,0);
     bool unwinnable;
-    bool onlyPawnsAndBishops = !(pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN));
+    Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
+    bool onlyPawnsAndBishops = !KRQ;
+    bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
     unwinnable = dynamically_unwinnable(pos, 6, search.intended_winner());
 
-    if ((onlyPawnsAndBishops) && !unwinnable)
+    bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
+
+    if (blockedCandidate && !unwinnable && onlyPawnsAndBishops)
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         unwinnable = true;
 
-    if ((onlyPawnsAndBishops && pos.checkers()) && !unwinnable)
+    if (blockedCandidate && !unwinnable && (almostOnlyPawnsAndBishops && pos.checkers()))
       if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
         unwinnable = true;
 
@@ -473,7 +477,7 @@ void CHA::loop(int argc, char* argv[]) {
       result = full_analyze(pos, search);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
     uint64_t duration = diff.count();
 
     if (adjudicateTimeout)
@@ -497,8 +501,8 @@ void CHA::loop(int argc, char* argv[]) {
         std::cout << " time " << duration << " (" << line << ")" << std::endl;
       }
 
-      if (duration > 100000)
-        std::cout << line << pos;
+      //if (duration > 100000000)
+      //  std::cout << line << pos;
 
     }
 
@@ -508,8 +512,8 @@ void CHA::loop(int argc, char* argv[]) {
       maxTime = duration;
   }
 
-  std::cout << "Analyzed " << totalPuzzles << " positions in " << totalTime/1000 << " ms "
-            << "(avg: " << totalTime/totalPuzzles << " us; max: " << maxTime << " us)" << std::endl;
+  std::cout << "Analyzed " << totalPuzzles << " positions in " << totalTime/1000000 << " ms "
+            << "(avg: " << totalTime/totalPuzzles/1000 << " us; max: " << maxTime/1000 << " us)" << std::endl;
 
   Threads.stop = true;
 }

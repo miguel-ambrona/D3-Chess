@@ -55,8 +55,7 @@ Bitboard UTIL::neighbours(Square s) {
   Bitboard sNeighbours = 0;
   Square presquares[8];
   unmove(presquares, KING, WHITE, s);  // Color does not matter
-  for (int j = 0; j < 8; ++j)
-  {
+  for (int j = 0; j < 8; ++j) {
     if (presquares[j] < 0)
       break;
     sNeighbours |= presquares[j];
@@ -72,6 +71,27 @@ Square UTIL::find_king(Position& pos, Color c) {
     if (king & s)
       break;
   return s;
+}
+
+// A pawn is said to be "lonely" if there are no opponent pawns in the same column
+
+bool UTIL::has_lonely_pawns(Position& pos){
+
+  Bitboard whitePawns = pos.pieces(WHITE, PAWN);
+  Bitboard blackPawns = pos.pieces(BLACK, PAWN);
+
+  int whitePawnOcc = 0;
+  int blackPawnOcc = 0;
+
+  for (Square s = SQ_A1; s <= SQ_H8; ++s) {
+    if ((whitePawns & s) && s < SQ_A7)
+      whitePawnOcc |= (1 << s % 8);
+
+    if ((blackPawns & s) && s > SQ_H2)
+      blackPawnOcc |= (1 << s % 8);
+  }
+
+  return whitePawnOcc != blackPawnOcc;
 }
 
 bool UTIL::is_corner(Square s){
