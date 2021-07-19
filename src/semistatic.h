@@ -27,7 +27,7 @@
 // DISCLAIMER:
 //   We require that this analysis be SOUND in the sense that negative statements are correct, e.g.
 //   if it is concluded that "the piece on e3 CANNOT go to a2", this is really the case.
-//   On the other hand, our algorithm may NOT be COMPLETE: it may not identify all impossiblities.
+//   On the other hand, our algorithm may NOT be COMPLETE: it may not identify all impossibilities.
 //   For example, even if it is concluded that "the piece on e3 CAN potentially go to a2", it may
 //   actually be impossible to reach a2 from e3, given the dynamic characteristics of the position.
 
@@ -65,7 +65,7 @@ namespace SemiStatic {
     return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | (int)target);
   }
 
-  inline int color_square_index(Color c, Square s){
+  inline int color_square_index(Color c, Square s) {
     return (c << 6) | int(s);
   }
 
@@ -111,7 +111,7 @@ namespace SemiStatic {
 //
 // These variables are modeled by the implications:
 //
-//   Clear(s,c) => \/_{aux : aux != s} X(s->aux)                 (If there is c-colored piece at 's'.)
+//   Clear(s,c) => \/_{aux : aux != s} X(s->aux)               (If there is c-colored piece at 's'.)
 //                 \/_{aux : ~c-colored piece at aux} X(aux->s)
 //
 //   Reach(s,c) => \/_{aux : non-king c-colored piece at aux} X(aux->s)
@@ -124,6 +124,10 @@ namespace SemiStatic {
 // Reach variables are useful to model pawn captures, for instance, if there is a white pawn on c4:
 //
 //   X(c4->a7) => Clear(a7,white) /\ { X(c4->*8) \/ X(c4->a6) \/ { X(c4->b6) /\ Reach(a7,black) } }.
+//
+// Black pawn on c5 and white piece on c2:
+//
+//   X(c5->c2) => X(c5->c3) /\ { Capturable(c2) \/ 
 //
 // In order to understand how we implement and solve the above system (although our actual
 // implementation may differ slighly from this model, for the sake of performance) think of the

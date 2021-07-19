@@ -45,8 +45,6 @@ void SemiStatic::System::saturate(Position& pos) {
 
   // Initialize the variables
 
-  // FIXME: We do not need to set everything to 'false', only those variable which
-  // will be used. This depends on the position (will that save significant time?).
   for (int j = 0; j < N_MOVE_VARS; ++j)
     variables[j] = false;
 
@@ -69,10 +67,6 @@ void SemiStatic::System::saturate(Position& pos) {
 
     Color c = color_of(pc);
     variables[clear_index(~c,s)] = true;
-
-    // Candidate FIX for the above FIXME
-    //  for (int j = 0; j < 64; ++j)
-    //    variables[index(p,c,s,SQ_A1) + j] = false;
 
     variables[index(p,c,s,s)] = true;
     occupied[n] = s;

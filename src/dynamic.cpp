@@ -81,7 +81,7 @@ namespace {
 
   bool need_loser_promotion(Position& pos, Color winner){
 
-    Bitboard minorPieces = pos.pieces(KNIGHT, BISHOP);// | pos.pieces(BISHOP);
+    Bitboard minorPieces = pos.pieces(KNIGHT, BISHOP);
 
     // Winner has just a knight and Loser only has pawns and/or queen(s)
     if (popcount(pos.pieces(winner)) == 2 && pos.count<KNIGHT>(winner) == 1
@@ -237,7 +237,7 @@ namespace {
   // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
   // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
 
-  bool dynamically_unwinnable(Position& pos, Depth depth, Color winner){
+  bool dynamically_unwinnable(Position& pos, Depth depth, Color winner, CHA::Search& search){
 
     // Insufficient material to win
     if (impossible_to_win(pos, winner))
@@ -256,7 +256,8 @@ namespace {
 
       StateInfo st;
       pos.do_move(m, st);
-      bool unwinnable = dynamically_unwinnable(pos, depth-1, winner);
+      search.step();
+      bool unwinnable = dynamically_unwinnable(pos, depth-1, winner, search);
       pos.undo_move(m);
 
       if (!unwinnable)
@@ -320,7 +321,7 @@ namespace {
     bool onlyPawnsAndBishops = !KRQ;
     bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
-    unwinnable = dynamically_unwinnable(pos, 6, search.intended_winner());
+    unwinnable = dynamically_unwinnable(pos, 6, search.intended_winner(), search);
 
     bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
 
@@ -332,7 +333,6 @@ namespace {
       if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
         unwinnable = true;
 
-    search.init();
     if (unwinnable)
       search.set_unwinnable();
 
@@ -501,8 +501,8 @@ void CHA::loop(int argc, char* argv[]) {
         std::cout << " time " << duration << " (" << line << ")" << std::endl;
       }
 
-      //if (duration > 100000000)
-      //  std::cout << line << pos;
+      if (duration > 100000000)
+        std::cout << "Hard: " << line << std::endl;
 
     }
 

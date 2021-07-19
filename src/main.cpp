@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[]) {
 
-  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.2" << std::endl;
+  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.3" << std::endl;
 
   CommandLine::init(argc, argv);
   UCI::init(Options);
@@ -37,5 +37,3 @@ int main(int argc, char* argv[]) {
   Threads.set(0);
   return 0;
 }
-
-
