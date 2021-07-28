@@ -26,13 +26,11 @@ void SemiStatic::System::init() {
   for (PieceType p = PAWN; p <= KING; ++p)
     for (Color c : { WHITE, BLACK })
       for (Square s = SQ_A1; s <= SQ_H8; ++s)
-        for (Square t = SQ_A1; t <= SQ_H8; ++t)
-        {
+        for (Square t = SQ_A1; t <= SQ_H8; ++t) {
           i = index(p,c,s,t);
           UTIL::unmove(presquares,p,c,t);
 
-          for (j = 0; j < 8; ++j)
-          {
+          for (j = 0; j < 8; ++j) {
             if (presquares[j] < 0)
               equations[i][j] = -1;
             else
@@ -58,8 +56,7 @@ void SemiStatic::System::saturate(Position& pos) {
   {
     Piece pc = pos.piece_on(s);
     PieceType p = type_of(pc);
-    if (p == NO_PIECE_TYPE)
-    {
+    if (p == NO_PIECE_TYPE) {
       variables[clear_index(WHITE,s)] = true;
       variables[clear_index(BLACK,s)] = true;
       continue;
@@ -76,30 +73,26 @@ void SemiStatic::System::saturate(Position& pos) {
   // Saturate the system
 
   bool change = true;
-  while (change)
-  {
+  while (change) {
     change = false;
 
-    for (int k = 0; k < n; ++k)
-    {
+    for (int k = 0; k < n; ++k) {
       Square source = occupied[k];
       Piece pc = pos.piece_on(source);
       PieceType p = type_of(pc);
       Color c = color_of(pc);
 
       // Update Clear variables
-      // (A piece can be cleared from a squared if it can move or it can be captured)
+      // (A piece can be cleared from a squared if it can move or it can be captured in that square)
 
-      for (Square aux = SQ_A1; aux <= SQ_H8; ++aux)
-      {
+      for (Square aux = SQ_A1; aux <= SQ_H8; ++aux) {
         PieceType aux_piece = type_of(pos.piece_on(aux));
-        if (source != aux &&
-            (variables[index(p,c,source,aux)]
-             || (aux_piece != NO_PIECE_TYPE && variables[index(aux_piece,~c,aux,source)])))
-          if (!variables[clear_index(c,source)])
-          {
+        if (source == aux)
+          continue;
+
+        if (variables[index(p,c,source,aux)] || (aux_piece != NO_PIECE_TYPE && variables[index(aux_piece,~c,aux,source)]))
+          if (!variables[clear_index(c,source)]) {
             change = true;
-            //std::cout << "Square is cleared: " << source << "; Color: " << c << "; AUX: " << aux << "; Movement: " << variables[index(p,c,source,aux)] << std::endl;
             variables[clear_index(c,source)] = true;
             break;
           }
@@ -108,34 +101,29 @@ void SemiStatic::System::saturate(Position& pos) {
       // Update Reach variables
       // (Reach(c,s) is true if a non-king c-colored piece can reach square s)
 
-      for (Square target = SQ_A1; target <= SQ_H8; ++target)
-        if (p != KING && variables[index(p,c,source,target)])
-        {
-          if (!variables[reach_index(c,target)])
-          {
-            change = true;
-            //std::cout << "Square is reached: " << target << "; Color: " << c << std::endl;
-            variables[reach_index(c,target)] = true;
-          }
-        }
+      if (p != KING)
+        for (Square target = SQ_A1; target <= SQ_H8; ++target)
+          if (variables[index(p,c,source,target)])
+            if (!variables[reach_index(c,target)]) {
+              change = true;
+              variables[reach_index(c,target)] = true;
+            }
 
       // Update the Movement variables
 
-      for (Square target = SQ_A1; target <= SQ_H8; ++target)
-      {
+      for (Square target = SQ_A1; target <= SQ_H8; ++target) {
+
         // If the target square contains a piece of color c and cannot be cleared yet, continue
         if (!variables[clear_index(c,target)])
           continue;
 
         // Check for KING attacks (if it moves to target)
-        if (p == KING)
-        {
+        if (p == KING) {
           bool target_attacked = false;
           Bitboard attackers = pos.attackers_to(target) & pos.pieces(~c);
 
           for (int sq = 0; sq < 64; ++sq)
-            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,(Square)sq)])
-            {
+            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,(Square)sq)]) {
               target_attacked = true;
               break;
             }
@@ -145,8 +133,8 @@ void SemiStatic::System::saturate(Position& pos) {
 
         int i = index(p,c,source,target);
 
-        for (int j = 0; j < 8; ++j)
-        {
+        for (int j = 0; j < 8; ++j) {
+
           int var = equations[i][j];
           if (var < 0 || variables[i])
             break;
@@ -154,8 +142,7 @@ void SemiStatic::System::saturate(Position& pos) {
           // Update the Movement variable
 
           if (variables[var]){
-            if (p == PAWN)
-            {
+            if (p == PAWN) {
               // Pawn push cannot be performed
               if (j == 0 && !variables[clear_index(~c,target)])
                 continue;
@@ -166,7 +153,6 @@ void SemiStatic::System::saturate(Position& pos) {
             }
 
             change = true;
-            //std::cout << "Movement: " << p << "(piece); " << c << "(color); " << source << "(from); " << target << "(to)" << std::endl;
             variables[i] = true;
             break;
           }
@@ -175,19 +161,15 @@ void SemiStatic::System::saturate(Position& pos) {
 
       // If the pawn can promote, it may go everywhere
 
-      if (p == PAWN)
-      {
+      if (p == PAWN) {
         Square prom_rank = (c == WHITE) ? SQ_A8 : SQ_A1;
         for (int file = 0; file < 8; ++file)
-          if (variables[index(p,c,source,(Square)(prom_rank+file))])
-          {
-            for (int j = 0; j < 64; ++j)
-            {
+          if (variables[index(p,c,source,(Square)(prom_rank+file))]) {
+            for (int j = 0; j < 64; ++j) {
               int i = index(p,c,source,SQ_A1) + j;
               change = variables[i] ? change : true;
               variables[i] = true;
             }
-            //std::cout << "Promotion: " << source << std::endl;
             break;
           }
       }
@@ -212,8 +194,7 @@ Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
 Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 
   Bitboard visitors = 0;
-  for (Square s = SQ_A1; s <= SQ_H8; ++s)
-  {
+  for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     Piece pc = pos.piece_on(s);
     PieceType p = type_of(pc);
 
@@ -262,10 +243,9 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     Bitboard escapingSquares = 0;
     Bitboard checkingSquares = 0;
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
-      if (distance<Square>(s,t) == 1 && loserKingRegion & t)
-      {
-        if (~visitorsSquareColor & t)
-        {
+      if (distance<Square>(s,t) == 1 && loserKingRegion & t) {
+        if (~visitorsSquareColor & t) {
+
           // We call it a escaping square only if Winner king cannot threaten it
           if (!(pos.pieces(intendedWinner, KING) &
                 SemiStatic::System::visitors(pos, UTIL::neighbours(t), intendedWinner)))
@@ -286,8 +266,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     bool unblockable = false;
     for (Square e = SQ_A1; e <= SQ_H8; ++e)
       if (escapingSquares & (1ULL << e))
-        if (!(~pos.pieces(KING) & SemiStatic::System::visitors(pos, square_bb(e), ~intendedWinner)))
-        {
+        if (!(~pos.pieces(KING) & SemiStatic::System::visitors(pos, square_bb(e), ~intendedWinner))) {
           unblockable = true;
           break;
         }
@@ -334,7 +313,7 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner, int trivialP
       return false;
 
   // Trivial progress: as long as there is only one legal move, make that move
-  // (But at most 100 times, to avoid loops)
+  // (But at most 100 times, to avoid infinite loops)
   StateInfo st;
   if (MoveList<LEGAL>(pos).size() == 1 && trivialProgressBound < 100)
     for (const auto& m : MoveList<LEGAL>(pos))
@@ -349,7 +328,7 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner, int trivialP
   return SYSTEM.is_unwinnable(pos, intendedWinner);
 }
 
-// Check if the position is unwinnable in all positions at depth 1-ply
+// Check if the position is unwinnable in all positions at depth 1 ply
 
 bool SemiStatic::is_unwinnable_after_one_move(Position& pos, Color intendedWinner) {
 
