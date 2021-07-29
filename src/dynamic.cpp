@@ -268,7 +268,7 @@ namespace {
     return true;
   }
 
-  CHA::SearchResult full_analyze(Position& pos, CHA::Search& search) {
+  CHA::SearchResult full_analysis(Position& pos, CHA::Search& search) {
 
     bool mate;
     search.init();
@@ -312,7 +312,7 @@ namespace {
     return search.get_result();
   }
 
-  CHA::SearchResult quick_analyze(Position& pos, CHA::Search& search) {
+  CHA::SearchResult quick_analysis(Position& pos, CHA::Search& search) {
 
     search.init();
     search.set(0,0);
@@ -321,7 +321,7 @@ namespace {
     bool onlyPawnsAndBishops = !KRQ;
     bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
-    unwinnable = dynamically_unwinnable(pos, 6, search.intended_winner(), search);
+    unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
 
     bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
 
@@ -471,10 +471,10 @@ void CHA::loop(int argc, char* argv[]) {
       result = find_shortest(pos, search);
 
     else if (quickAnalysis)
-      result = quick_analyze(pos, search);
+      result = quick_analysis(pos, search);
 
     else
-      result = full_analyze(pos, search);
+      result = full_analysis(pos, search);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
