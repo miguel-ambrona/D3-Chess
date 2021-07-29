@@ -98,16 +98,23 @@ void SemiStatic::System::saturate(Position& pos) {
           }
       }
 
-      // Update Reach variables
+      // Update Reach and Capture variables
       // (Reach(c,s) is true if a non-king c-colored piece can reach square s)
+      // (Capture(c,s) is true if a c-colored piece can reach square s on a capturing move)
 
-      if (p != KING)
-        for (Square target = SQ_A1; target <= SQ_H8; ++target)
-          if (variables[index(p,c,source,target)])
-            if (!variables[reach_index(c,target)]) {
-              change = true;
-              variables[reach_index(c,target)] = true;
-            }
+      for (Square target = SQ_A1; target <= SQ_H8; ++target)
+        if (variables[index(p,c,source,target)]) {
+          if (p != KING && !variables[reach_index(c,target)]) {
+            change = true;
+            variables[reach_index(c,target)] = true;
+          }
+
+          // We update pawn captures later
+          if (p != PAWN && !variables[capture_index(c,target)]) {
+            change = true;
+            variables[capture_index(c,target)] = true;
+          }
+        }
 
       // Update the Movement variables
 
@@ -143,17 +150,56 @@ void SemiStatic::System::saturate(Position& pos) {
 
           if (variables[var]){
             if (p == PAWN) {
-              // Pawn push cannot be performed
-              if (j == 0 && !variables[clear_index(~c,target)])
-                continue;
+
+              // Pawn push cannot be performed if there is an obstacle in target
+              if (j == 0) {
+                if (!variables[clear_index(~c,target)])
+                  continue;
+
+                // or if there is a pawn in the target square
+                // which could not leave its file and the source pawn could also not leave its file.
+
+                Piece tpiece = pos.piece_on(target);
+
+                if (color_of(tpiece) != c && type_of(tpiece) == PAWN
+                    && file_of(source) == file_of(target)) {
+                  bool confronting = true;
+                  for (Square aux = SQ_A1; aux <= SQ_H8; ++aux) {
+
+                    if (file_of(source) != file_of(aux)) {
+                      if (variables[index(p,c,source,aux)] || variables[index(PAWN,~c,target,aux)]){
+                        confronting = false;
+                        break;
+                      }
+                    }
+                    else if ((rank_of(source) < rank_of(aux) && rank_of(aux) <= rank_of(target))
+                          || (rank_of(source) > rank_of(aux) && rank_of(aux) >= rank_of(target))) {
+
+                      if (variables[capture_index(c,aux)]) {
+                        confronting = false;
+                        break;
+                      }
+                    }
+
+                  }
+
+                  if (confronting)
+                    continue;
+                }
+
+              } // end push
 
               // Pawn capture cannot be performed
               if (j > 0 && !variables[reach_index(~c,target)])
                 continue;
+
+              if (j > 0)
+                variables[capture_index(c,target)] = true;
             }
 
             change = true;
             variables[i] = true;
+
             break;
           }
         }
@@ -205,7 +251,8 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
       if (color == c && (region & t) && variables[index(p,c,s,t)])
-        visitors |= s;
+        if (p != PAWN) // We ignore pawn visitors for now (is this sound?)
+          visitors |= s;
   }
 
   return visitors;
@@ -221,6 +268,8 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
   // If there are no visitors, the position is unwinnable
   if (!visitors)
     return true;
+
+  //std::cout << Bitboards::pretty(visitors);
 
   // If there are visitors of both square colors, declare the position as potentially winnable
   if ((visitors & DarkSquares) && (visitors & ~DarkSquares))

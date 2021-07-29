@@ -33,10 +33,11 @@
 
 namespace SemiStatic {
 
-  constexpr int N_MOVE_VARS   = 49152;  // 2 * 6 * 64 * 64 (color * piece_type * from_sq * to_sq)
-  constexpr int N_PROM_VARS   = 128;    // 2 * 64 (color * from_sq)
-  constexpr int N_CLEAR_VARS  = 128;    // 2 * 64 (color * square)
-  constexpr int N_REACH_VARS  = 128;    // 2 * 64 (color * square)
+  constexpr int N_MOVE_VARS    = 49152;  // 2 * 6 * 64 * 64 (color * piece_type * from_sq * to_sq)
+  constexpr int N_PROM_VARS    = 128;    // 2 * 64 (color * from_sq)
+  constexpr int N_CLEAR_VARS   = 128;    // 2 * 64 (color * square)
+  constexpr int N_REACH_VARS   = 128;    // 2 * 64 (color * square)
+  constexpr int N_CAPTURE_VARS = 128;    // 2 * 64 (color * square)
 
   // Equations for clear and reach variables are handeled independently:
 
@@ -74,11 +75,15 @@ namespace SemiStatic {
   }
 
   inline int clear_index(Color c, Square s) {
-    return N_MOVE_VARS + 128 + color_square_index(c,s);
+    return N_MOVE_VARS + N_PROM_VARS + color_square_index(c,s);
   }
 
   inline int reach_index(Color c, Square s) {
-    return N_MOVE_VARS + 256 + color_square_index(c,s);
+    return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + color_square_index(c,s);
+  }
+
+  inline int capture_index(Color c, Square s) {
+    return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + N_REACH_VARS + color_square_index(c,s);
   }
 
   void init();
@@ -106,8 +111,9 @@ namespace SemiStatic {
 // In order to be sound, our algorithm must include all move-predecessor implications.
 // In order to make our algorithm as complete as possible, we will consider additional variables:
 //
-//  * Clear(s,c) : square 's' can be cleared of (or does not contain) pieces of color 'c'.
-//  * Reach(s,c) : square 's' can be reached by (or contains) some (non-king) piece of color 'c'.
+//  * Clear(s,c)   : square 's' can be cleared of (or does not contain) pieces of color 'c'.
+//  * Reach(s,c)   : square 's' can be reached by (or contains) some (non-king) piece of color 'c'.
+//  * Capture(s,c) : square 's' can be reached by a piece of color 'c' on a capturing move.
 //
 // These variables are modeled by the implications:
 //
