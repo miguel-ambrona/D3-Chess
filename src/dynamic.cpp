@@ -244,8 +244,8 @@ namespace {
       return true;
 
     // Checkmate!
-    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() != winner)
-      return true;
+    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers())
+      return pos.side_to_move() == winner;
 
     // Maximum depth reached
     if (depth <= 0)
