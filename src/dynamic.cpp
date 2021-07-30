@@ -1,6 +1,7 @@
 /*
-  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
-  whether a certain player can deliver checkmate (i.e. win) in a given chess position.
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for
+  checking whether a certain player can deliver checkmate (i.e. win) in a given
+  chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
   Stockfish is free software provided under the GNU General Public License
@@ -8,9 +9,10 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
+  Chess Unwinnability Analyzer is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more
+  details.
 */
 
 #include <sstream>
@@ -26,105 +28,117 @@
 
 namespace {
 
-  // We will reward variations that make pieces closer to a mating position in a corner.
-  // The corner will be in the relative 8-th rank of the intended Winner and the corner color
-  // depends on the existing pieces in the position.
-  // E.g. if the corner is decided to be dark and WHITE is supposed to win, the corner will be H8.
-  // We want Loser's king to be on H8, Winner's king on H6 (or G6), have a Loser's piece on G8,
-  // blocking the exit and any Winner's piece pointing to H8, delivering mate.
-  // The next function sets the desired square for the moving piece, based on the above details.
+  // We will reward variations that make pieces closer to a mating position in a
+  // corner. The corner will be in the relative 8-th rank of the intended Winner
+  // and the corner color depends on the existing pieces in the position.
+  // E.g. if the corner is decided to be dark and WHITE is supposed to win, the
+  // corner will be H8. We want Loser's king to be on H8, Winner's king on H6
+  // (or G6), have a Loser's piece on G8, blocking the exit and any Winner's
+  // piece pointing to H8, delivering mate. The next function sets the desired
+  // square for the moving piece, based on the above details.
 
-  inline Square set_target(Position& pos, PieceType movedPiece, Color winner){
+  inline Square set_target(Position& pos, PieceType movedPiece, Color winner) {
 
     // We want to go to a dark corner if Winner has a dark-squared bishop
     // or Loser has a light-squared bishop (and Winner doesn't).
 
-    bool darkCorner = (DarkSquares & pos.pieces(winner, BISHOP))
-      || (popcount(pos.pieces(winner, BISHOP)) == 0 && (~DarkSquares & pos.pieces(~winner, BISHOP)));
+    bool darkCorner = (DarkSquares & pos.pieces(winner, BISHOP)) ||
+                      (popcount(pos.pieces(winner, BISHOP)) == 0 &&
+                       (~DarkSquares & pos.pieces(~winner, BISHOP)));
 
     bool king = (movedPiece == KING);
     bool isWinnersTurn = (pos.side_to_move() == winner);
 
-    // Assume for a moment that Winner is WHITE and the needed corner is dark (i.e. H8)
-    Square target = isWinnersTurn ? (king ? SQ_H6 : SQ_H8) : (king ? SQ_H8 : SQ_G8);
+    // Assume for a moment that the target corner is H8
+    Square target =
+      isWinnersTurn ? (king ? SQ_H6 : SQ_H8) : (king ? SQ_H8 : SQ_G8);
 
     // Correct the file in case we need a light corner (the corner becomes A8)
     if (!darkCorner)
       target = flip_file(target);
 
-    // Correct the rank in case Winner was BLACK (the corner will become A1 or H1)
+    // Correct the rank in case Winner was BLACK (the corner becomes A1 or H1)
     if (winner == BLACK)
       target = flip_rank(flip_file(target));
 
     return target;
   }
 
-  // Decide whether a piece is getting closer to a given square (only meaninful for "slow" pieces).
-  // (It will be used to check if the position is getting closer to the targetted mate.)
+  // Decide whether a piece is getting closer to a given square (only meaninful
+  // for "slow" pieces). (It will be used to check if the position is getting
+  // closer to the targetted mate.)
 
-  bool going_to_square(Move m, Square s, PieceType p){
+  bool going_to_square(Move m, Square s, PieceType p) {
 
     if (p == KING)
       return distance<Square>(to_sq(m), s) < distance<Square>(from_sq(m), s);
 
     else if (p == KNIGHT)
-      return KnightDistance::get(to_sq(m), s) < KnightDistance::get(from_sq(m), s);
+      return KnightDistance::get(to_sq(m), s) <
+             KnightDistance::get(from_sq(m), s);
 
     else
       return false;
   }
 
-  // Check if it is essential that Loser promotes in order for Winner to be able to checkmate.
-  // This function may result in false positives that is, the output can be 'true' even if there
-  // is a mating sequence that does not involve promotions.
-  // (We do not care about such sequences and will reward pawn pushes if the output is 'true'.)
+  // Check if it is essential that Loser promotes in order for Winner to be able
+  // to checkmate. This function may result in false positives that is, the
+  // output can be 'true' even if there is a mating sequence that does not
+  // involve promotions. (We do not care about such sequences and will reward
+  // pawn pushes if the output is 'true'.)
 
-  bool need_loser_promotion(Position& pos, Color winner){
+  bool need_loser_promotion(Position& pos, Color winner) {
 
     Bitboard minorPieces = pos.pieces(KNIGHT, BISHOP);
 
     // Winner has just a knight and Loser only has pawns and/or queen(s)
-    if (popcount(pos.pieces(winner)) == 2 && pos.count<KNIGHT>(winner) == 1
-        && (popcount(pos.pieces(~winner) & (minorPieces | pos.pieces(ROOK))) == 0))
+    if (popcount(pos.pieces(winner)) == 2 && pos.count<KNIGHT>(winner) == 1 &&
+        (popcount(pos.pieces(~winner) & (minorPieces | pos.pieces(ROOK))) == 0))
       return true;
 
-    // Winner has just (same colored) bishops and Loser has no knights or bishops of the opp. color.
-    Bitboard bishopsColor = DarkSquares & pos.pieces(winner, BISHOP) ? DarkSquares : ~DarkSquares;
-    if (popcount(pos.pieces(winner)) == pos.count<BISHOP>(winner) + 1
-        && popcount(~bishopsColor & pos.pieces(BISHOP)) == 0
-        && popcount(pos.pieces(~winner) & pos.pieces(KNIGHT)) == 0)
-        return true;
+    // Winner has just (same colored) bishops and Loser has no knights or
+    // bishops of the opposite color.
+    Bitboard bishopsColor =
+      DarkSquares & pos.pieces(winner, BISHOP) ? DarkSquares : ~DarkSquares;
+    if (popcount(pos.pieces(winner)) == pos.count<BISHOP>(winner) + 1 &&
+        popcount(~bishopsColor & pos.pieces(BISHOP)) == 0 &&
+        popcount(pos.pieces(~winner) & pos.pieces(KNIGHT)) == 0)
+      return true;
 
     return false;
   }
 
-  // Statically (without moving pieces) check whether it is impossible for Winner to checkmate.
-  // This function never gives false positives! (But we cannot expect it to be complete, of course.)
-  // This function calls 'need_loser_promotion' after having assured that Loser has no pawns.
-  // Note that if Loser has no pawns, 'need_loser_promotion' will never result in false positives!
+  // Statically (without moving pieces) check whether it is impossible for
+  // Winner to checkmate. This function never gives false positives! (But we
+  // cannot expect it to be complete, of course.) This function calls
+  // [need_loser_promotion] after having assured that Loser has no pawns.
+  // Note that if Loser has no pawns, 'need_loser_promotion' will never result
+  // in false positives!
 
-  bool impossible_to_win(Position& pos, Color winner){
+  bool impossible_to_win(Position& pos, Color winner) {
 
     // Winner has just the king
     if (popcount(pos.pieces(winner)) == 1)
       return true;
 
     // A promotion by Loser is needed, but Loser has no pawns.
-    return popcount(pos.pieces(~winner, PAWN)) == 0 && need_loser_promotion(pos, winner);
+    return popcount(pos.pieces(~winner, PAWN)) == 0 &&
+           need_loser_promotion(pos, winner);
   }
 
-  // Type to classify variations in the search performed in 'find_mate', the search will be deeper
-  // in REWARDed variations and shorter in PUNISHed ones.
+  // Type to classify variations in the search performed in 'find_mate', the
+  // search will be deeper in REWARDed variations and shorter in PUNISHed ones.
 
   enum VariationType { NORMAL, REWARD, PUNISH };
 
-  // The following is the most important function of this project!
-  // It performs an exhaustive search (with many tricks) over the tree of moves, that ends as soon
-  // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
-  // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
+  // [find-mate] performs an exhaustive search (with many tricks) over the tree
+  // of moves, that ends as soon as a checkmate (delivered by the intended
+  // winner) is found or the maximum depth is reached. The function returns the
+  // ply depth at which checkmate was found or -1 if no mate was found.
 
   template <CHA::SearchMode MODE, CHA::SearchTarget TARGET>
-  bool find_mate(Position& pos, CHA::Search& search, Depth depth, bool pastProgress){
+  bool find_mate(Position& pos, CHA::Search& search, Depth depth,
+                 bool pastProgress) {
 
     Color winner = search.intended_winner();
     Color loser = ~winner;
@@ -134,9 +148,8 @@ namespace {
     bool found;
     Depth movesLeft = search.max_depth() - depth;
 
-    if (MODE == CHA::FULL)
-    {
-      // If the position is found in TT with more depth, we can safetly ignore this branch
+    // If the position is found with more depth, we can ignore this branch
+    if (MODE == CHA::FULL) {
       tte = TT.probe(pos.key(), found);
       if (found && (tte->depth() >= movesLeft))
         return false;
@@ -147,29 +160,29 @@ namespace {
       return false;
 
     // Checkmate!
-    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() && pos.side_to_move() == loser){
+    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers() &&
+        pos.side_to_move() == loser) {
       search.set_winnable();
       return true;
     }
 
     // Search limits
-    if (depth >= search.max_depth() || search.is_local_limit_reached())
-    {
+    if (depth >= search.max_depth() || search.is_local_limit_reached()) {
       search.interrupt();
       return false;
     }
 
-    // Store this position in the TT (since we will then analyze it at depth 'movesLeft')
+    // Store this position in the TT (we then analyze it at depth 'movesLeft')
     if (MODE == CHA::FULL)
-      tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE, VALUE_NONE);
+      tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE,
+                VALUE_NONE);
 
-    // Check if Loser has to promote a piece, because Winner has not enough material
+    // Check if Loser has to promote, because Winner has not enough material
     bool needLoserPromotion = need_loser_promotion(pos, winner);
     bool isWinnersTurn = pos.side_to_move() == winner;
 
     // Iterate over all legal moves
-    for (const ExtMove& m : MoveList<LEGAL>(pos))
-    {
+    for (const ExtMove& m : MoveList<LEGAL>(pos)) {
       VariationType variation = NORMAL;
 
       if (TARGET == CHA::ANY) {
@@ -177,15 +190,15 @@ namespace {
         Square target = set_target(pos, movedPiece, winner);
 
         if (isWinnersTurn) {
-          if (pos.advanced_pawn_push(m) || pos.capture(m) || going_to_square(m, target, movedPiece))
+          if (pos.advanced_pawn_push(m) || pos.capture(m) ||
+              going_to_square(m, target, movedPiece))
             variation = REWARD;
         }
         else {
-
           if (needLoserPromotion) {
-            PieceType promoted = promotion_type(m);  // It could be of NO_PIECE_TYPE
-            bool heavyPromotion = promoted == QUEEN || promoted == ROOK;// || promoted == BISHOP;
-            variation = (movedPiece == PAWN && !heavyPromotion) ? REWARD : PUNISH;
+            PieceType promoted = promotion_type(m);  // Possibly NO_PIECE_TYPE
+            bool heavyProm = (promoted == QUEEN || promoted == ROOK);
+            variation = (movedPiece == PAWN && !heavyProm) ? REWARD : PUNISH;
           }
 
           if (going_to_square(m, target, movedPiece))
@@ -203,15 +216,19 @@ namespace {
       Depth newDepth = depth + 1;
 
       if (TARGET == CHA::ANY) {
-        // Do not reward any variations while Loser has queen(s) if it was their turn
+        // Do not reward while Loser has queen(s) if it was their turn
         if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
           variation = (variation = REWARD) ? NORMAL : variation;
 
         switch (variation) {
-          case REWARD: newDepth--; break;
-          case PUNISH: newDepth = std::min(search.max_depth(), newDepth + 2); break;
+          case REWARD:
+            newDepth--;
+            break;
+          case PUNISH:
+            newDepth = std::min(search.max_depth(), newDepth + 2);
+            break;
           default:
-            if (pastProgress) // If the previous player made some progress, reward this
+            if (pastProgress) // Reward if the previous player made progress
               newDepth--;
         }
       }
@@ -220,7 +237,8 @@ namespace {
       search.annotate_move(m);
       search.step();
 
-      int checkMate = find_mate<MODE,TARGET>(pos, search, newDepth, variation == REWARD);
+      int checkMate =
+        find_mate<MODE,TARGET>(pos, search, newDepth, variation == REWARD);
 
       search.undo_step();
       pos.undo_move(m);
@@ -233,11 +251,10 @@ namespace {
     return false;
   }
 
-  // It performs an exhaustive search (with many tricks) over the tree of moves, that ends as soon
-  // as a checkmate (delivered by the intended winner) is found or the maximum depth is reached.
-  // The function returns the ply depth at which checkmate was found or -1 if no mate was found.
+  // ???
 
-  bool dynamically_unwinnable(Position& pos, Depth depth, Color winner, CHA::Search& search){
+  bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
+                              CHA::Search& search) {
 
     // Insufficient material to win
     if (impossible_to_win(pos, winner))
@@ -284,27 +301,29 @@ namespace {
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         search.set_unwinnable();
 
-    if (search.get_result() == CHA::UNDETERMINED)
-    {
+    if (search.get_result() == CHA::UNDETERMINED) {
       TT.clear();
 
-      // Apply iterative deepening (find_mate may look deeper than maxDepth on rewarded variations)
-      for (int maxDepth = 2; maxDepth <= 1000; maxDepth++)
-      {
-        search.set(maxDepth, 10000); // Set local limit to 10000, empirically good
+      // Apply iterative deepening (find_mate may look deeper than maxDepth on
+      // rewarded variations)
+      for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
+        search.set(maxDepth, 10000); // Local limit of 10000 is empirically good
         mate = find_mate<CHA::FULL,CHA::ANY>(pos, search, 0, false);
 
         if (!search.is_interrupted() && !mate)
           search.set_unwinnable();
 
-        if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
+        if (search.get_result() != CHA::UNDETERMINED ||
+            search.is_limit_reached())
           break;
       }
     }
 
-    // Careful, the following function modifies the position, we want it for extreme completeness:
-    // TODO: Improve it to arbitrary depth (not just one). Are there examples where more than
-    //       depth 1 will be needed?
+    // Careful, the following function modifies the position, we want it for
+    // extreme completeness:
+    // FIXME:
+    // Improve it to arbitrary depth (not just one).
+    // Are there examples where more than depth 1 will be needed?
     if (search.get_result() == CHA::UNDETERMINED)
       if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
         search.set_unwinnable();
@@ -329,7 +348,8 @@ namespace {
       if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
         unwinnable = true;
 
-    if (blockedCandidate && !unwinnable && (almostOnlyPawnsAndBishops && pos.checkers()))
+    if (blockedCandidate && !unwinnable &&
+        (almostOnlyPawnsAndBishops && pos.checkers()))
       if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
         unwinnable = true;
 
@@ -348,8 +368,7 @@ namespace {
       search.set_unwinnable();
 
     TT.clear();
-    for (int depth = 1; depth <= 1000; depth++)
-    {
+    for (int depth = 1; depth <= 1000; depth++) {
       search.set(depth, search.get_limit());
       mate = find_mate<CHA::FULL,CHA::SHORTEST>(pos, search, 0, false);
 
@@ -363,10 +382,11 @@ namespace {
     return search.get_result();
   }
 
-  // We expect input commands to be a line of text containing a FEN followed by the intended winner
-  // ('white' or 'black') or nothing (the default intended winner is last player who moved)
+  // We expect input commands to be a line of text containing a FEN followed by
+  // the intended winner ('white' or 'black') or nothing (the default intended
+  // winner is last player who moved)
 
-  Color parse_line(Position& pos, StateInfo* si, std::string& line){
+  Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 
     std::string fen, token;
     std::istringstream iss(line);
@@ -388,11 +408,11 @@ namespace {
 
 } // namespace
 
-// CHA::print_result() shows prints one line of information about the search.
+// CHA::print_result() prints one line of information about the search.
 
 void CHA::Search::print_result() const {
 
-  if (result == WINNABLE){
+  if (result == WINNABLE) {
     std::cout << "winnable";
     for (int i = 0; i < std::min(mateLen, MAX_VARIATION_LENGTH); i++)
       std::cout << " " << UCI::move(checkmateSequence[i], false);
@@ -408,7 +428,7 @@ void CHA::Search::print_result() const {
   std::cout << " nodes " << (totalCounter + counter);
 }
 
-/// CHA::loop() waits for a command from stdin or the tests file and analyzes it.
+/// CHA::loop() waits for a command from stdin or tests file and analyzes it.
 
 void CHA::loop(int argc, char* argv[]) {
 
@@ -423,8 +443,8 @@ void CHA::loop(int argc, char* argv[]) {
   bool adjudicateTimeout = false;
   uint64_t globalLimit = 500000;
 
-  for (int i = 1; i < argc; ++i){
-    if (std::string(argv[i]) == "test"){
+  for (int i = 1; i < argc; ++i) {
+    if (std::string(argv[i]) == "test") {
       runningTests = true;
       quickAnalysis = true;
     }
@@ -441,7 +461,7 @@ void CHA::loop(int argc, char* argv[]) {
     if (std::string(argv[i]) == "-timeout")
       adjudicateTimeout = true;
 
-    if (std::string(argv[i]) == "-limit"){
+    if (std::string(argv[i]) == "-limit") {
       std::istringstream iss(argv[i+1]);
       iss >> globalLimit;
     }
@@ -480,8 +500,7 @@ void CHA::loop(int argc, char* argv[]) {
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
     uint64_t duration = diff.count();
 
-    if (adjudicateTimeout)
-    {
+    if (adjudicateTimeout) {
       if (result == UNWINNABLE)
         std::cout << "1/2-1/2" << std::endl;
 
@@ -491,17 +510,17 @@ void CHA::loop(int argc, char* argv[]) {
       else
         std::cout << "0-1" << std::endl;
     }
-    else
-    {
-      // On quick mode, we only print [unwinnable] ([undetermined] are all guessed to be [winnable])
+    else {
+      // On quick mode, we only print [unwinnable] ([undetermined] are all
+      // guessed to be [winnable]).
       // On full mode, we print all cases except possibly [winnable].
-      if ((!quickAnalysis || result == UNWINNABLE) && (!skipWinnable || result != CHA::WINNABLE))
-      {
+      if ((!quickAnalysis || result == UNWINNABLE) &&
+          (!skipWinnable || result != CHA::WINNABLE)) {
         search.print_result();
         std::cout << " time " << duration << " (" << line << ")" << std::endl;
       }
 
-      if (duration > 100000000)
+      if (duration > 100 * 1000 * 1000)
         std::cout << "Hard: " << line << std::endl;
 
     }
@@ -512,8 +531,10 @@ void CHA::loop(int argc, char* argv[]) {
       maxTime = duration;
   }
 
-  std::cout << "Analyzed " << totalPuzzles << " positions in " << totalTime/1000000 << " ms "
-            << "(avg: " << totalTime/totalPuzzles/1000 << " us; max: " << maxTime/1000 << " us)" << std::endl;
+  std::cout << "Analyzed " << totalPuzzles << " "
+            << "positions in " << totalTime/1000/1000 << " ms "
+            << "(avg: " << totalTime/totalPuzzles/1000 << " us; "
+            << "max: " << maxTime/1000 << " us)" << std::endl;
 
   Threads.stop = true;
 }

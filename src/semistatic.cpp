@@ -1,6 +1,7 @@
 /*
-  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
-  whether a certain player can deliver checkmate (i.e. win) in a given chess position.
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for
+  checking whether a certain player can deliver checkmate (i.e. win) in a given
+  chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
   Stockfish is free software provided under the GNU General Public License
@@ -8,9 +9,10 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
+  Chess Unwinnability Analyzer is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more
+  details.
 */
 
 #include "timeman.h"
@@ -52,8 +54,7 @@ void SemiStatic::System::saturate(Position& pos) {
   Square occupied[64];
   int n = 0;
 
-  for (Square s = SQ_A1; s <= SQ_H8; ++s)
-  {
+  for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     Piece pc = pos.piece_on(s);
     PieceType p = type_of(pc);
     if (p == NO_PIECE_TYPE) {
@@ -82,15 +83,17 @@ void SemiStatic::System::saturate(Position& pos) {
       PieceType p = type_of(pc);
       Color c = color_of(pc);
 
-      // Update Clear variables
-      // (A piece can be cleared from a squared if it can move or it can be captured in that square)
+      // Update Clear variables: a piece can be cleared from a squared if it can
+      // move or it can be captured in that square)
 
       for (Square aux = SQ_A1; aux <= SQ_H8; ++aux) {
         PieceType aux_piece = type_of(pos.piece_on(aux));
         if (source == aux)
           continue;
 
-        if (variables[index(p,c,source,aux)] || (aux_piece != NO_PIECE_TYPE && variables[index(aux_piece,~c,aux,source)]))
+        if (variables[index(p,c,source,aux)] ||
+            (aux_piece != NO_PIECE_TYPE &&
+             variables[index(aux_piece,~c,aux,source)]))
           if (!variables[clear_index(c,source)]) {
             change = true;
             variables[clear_index(c,source)] = true;
@@ -98,9 +101,9 @@ void SemiStatic::System::saturate(Position& pos) {
           }
       }
 
-      // Update Reach and Capture variables
-      // (Reach(c,s) is true if a non-king c-colored piece can reach square s)
-      // (Capture(c,s) is true if a c-colored piece can reach square s on a capturing move)
+      // Update Reach and Capture variable:
+      // Reach(c,s) is true if a non-king c-colored piece can reach square s
+      // Capture(c,s) is true if some c-colored piece could capture on s
 
       for (Square target = SQ_A1; target <= SQ_H8; ++target)
         if (variables[index(p,c,source,target)]) {
@@ -120,7 +123,8 @@ void SemiStatic::System::saturate(Position& pos) {
 
       for (Square target = SQ_A1; target <= SQ_H8; ++target) {
 
-        // If the target square contains a piece of color c and cannot be cleared yet, continue
+        // If the target square contains a piece of color c and cannot
+        // be cleared yet, continue
         if (!variables[clear_index(c,target)])
           continue;
 
@@ -156,8 +160,8 @@ void SemiStatic::System::saturate(Position& pos) {
                 if (!variables[clear_index(~c,target)])
                   continue;
 
-                // or if there is a pawn in the target square
-                // which could not leave its file and the source pawn could also not leave its file.
+                // or if there is a pawn in target which could not leave its
+                // file and the source pawn could also not leave its file
 
                 Piece tpiece = pos.piece_on(target);
 
@@ -167,13 +171,16 @@ void SemiStatic::System::saturate(Position& pos) {
                   for (Square aux = SQ_A1; aux <= SQ_H8; ++aux) {
 
                     if (file_of(source) != file_of(aux)) {
-                      if (variables[index(p,c,source,aux)] || variables[index(PAWN,~c,target,aux)]){
+                      if (variables[index(p,c,source,aux)] ||
+                          variables[index(PAWN,~c,target,aux)]) {
                         confronting = false;
                         break;
                       }
                     }
-                    else if ((rank_of(source) < rank_of(aux) && rank_of(aux) <= rank_of(target))
-                          || (rank_of(source) > rank_of(aux) && rank_of(aux) >= rank_of(target))) {
+                    else if ((rank_of(source) < rank_of(aux) &&
+                                rank_of(aux) <= rank_of(target))
+                          || (rank_of(source) > rank_of(aux) &&
+                                rank_of(aux) >= rank_of(target))) {
 
                       if (variables[capture_index(c,aux)]) {
                         confronting = false;
@@ -261,7 +268,8 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
   Bitboard loserKingRegion = king_region(pos, ~intendedWinner);
-  Bitboard visitors = SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner);
+  Bitboard visitors =
+    SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner);
 
   //std::cout << Bitboards::pretty(loserKingRegion);
 
@@ -271,21 +279,25 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
   //std::cout << Bitboards::pretty(visitors);
 
-  // If there are visitors of both square colors, declare the position as potentially winnable
+  // If there are visitors of both square colors, declare the position as
+  // potentially winnable
   if ((visitors & DarkSquares) && (visitors & ~DarkSquares))
     return false;
 
-  // If there are visitors other than bishops, declare the position as potentially winnable
+  // If there are visitors other than bishops, declare the position as
+  // potentially winnable
   for (Square s = SQ_A1; s <= SQ_H8; ++s)
     if ((visitors & s) && type_of(pos.piece_on(s)) != BISHOP)
       return false;
 
-  Bitboard visitorsSquareColor = (visitors & DarkSquares) ? DarkSquares : ~DarkSquares;
+  Bitboard visitorsSquareColor =
+    (visitors & DarkSquares) ? DarkSquares : ~DarkSquares;
 
-  for (Square s = SQ_A1; s <= SQ_H8; ++s)
-  {
+  for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     // Check that at least a visitor can go to s and s is in the mating region
-    Bitboard matingBishops = SemiStatic::System::visitors(pos, square_bb(s), intendedWinner);
+    Bitboard matingBishops =
+      SemiStatic::System::visitors(pos, square_bb(s), intendedWinner);
+
     if (!matingBishops || !(loserKingRegion & s))
       continue;
 
@@ -297,7 +309,8 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
           // We call it a escaping square only if Winner king cannot threaten it
           if (!(pos.pieces(intendedWinner, KING) &
-                SemiStatic::System::visitors(pos, UTIL::neighbours(t), intendedWinner)))
+                SemiStatic::System::visitors(pos, UTIL::neighbours(t),
+                                             intendedWinner)))
             escapingSquares |= t;
         }
 
@@ -305,9 +318,12 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
           checkingSquares |= t;
       }
 
-    // If there are two mating diagonals pointing to s, Winner must have at least two
-    // bishops in the region or Loser's king will have at least an escaping square
-    bool twoDiagonals = checkingSquares & ((checkingSquares >> 2) | (checkingSquares >> 16));
+    // If there are two mating diagonals pointing to s, Winner must have at
+    // least two bishops in the region or Loser's king will have at least an
+    // escaping square
+    bool twoDiagonals =
+      checkingSquares & ((checkingSquares >> 2) | (checkingSquares >> 16));
+
     if (twoDiagonals && popcount(matingBishops) < 2)
       continue;
 
@@ -315,19 +331,26 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     bool unblockable = false;
     for (Square e = SQ_A1; e <= SQ_H8; ++e)
       if (escapingSquares & (1ULL << e))
-        if (!(~pos.pieces(KING) & SemiStatic::System::visitors(pos, square_bb(e), ~intendedWinner))) {
+        if (!(~pos.pieces(KING) &
+              SemiStatic::System::visitors(pos, square_bb(e),
+                                           ~intendedWinner))) {
           unblockable = true;
           break;
         }
 
-    // The position is unwinnable if loser has not enough blockers for the escaping squares
+    // The position is unwinnable if loser has not enough blockers for
+    // the escaping squares
     if (unblockable)
       continue;
 
-    Bitboard blockers = SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner);
-    Bitboard actualBlockers = blockers & ~visitorsSquareColor & ~pos.pieces(KING);
+    Bitboard blockers =
+      SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner);
 
-    // If there are as many blockers as escaping squares the position may be winnable
+    Bitboard actualBlockers =
+      blockers & ~visitorsSquareColor & ~pos.pieces(KING);
+
+    // If there are as many blockers as escaping squares the position
+    // may be winnable
     int blockersCnt = 0;
     for (Square blocker = SQ_A1; blocker <= SQ_H8; ++blocker)
       if ((actualBlockers & blocker) &&
@@ -338,23 +361,28 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
       return false;
   }
 
-  // If we made it so far it is because the Winner's single-colored bishops cannot mate since
-  // all squares in the Loser's king region admit at least an opposite color escaping square
+  // If we made it so far it is because the Winner's single-colored bishops
+  // cannot mate since all squares in the Loser's king region admit at least an
+  // opposite color escaping square
 
   return true;
 }
 
-static SemiStatic::System SYSTEM = SemiStatic::System(); // Our global SemiStatic System variable
+// Our global SemiStatic System variable.
 
-// SemiStatic::init fills the equations relative to Movement variables (must be executed only once)
+static SemiStatic::System SYSTEM = SemiStatic::System();
+
+// SemiStatic::init fills the equations relative to Movement variables
+// (must be executed only once).
 
 void SemiStatic::init() {
   SYSTEM.init();
 }
 
-// Check if the position is semistatically unwinnable
+// Check if the position is semistatically unwinnable.
 
-bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner, int trivialProgressBound) {
+bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner,
+                               int trivialProgressBound) {
 
   // If en passant is possible, return false
   for (const auto& m : MoveList<LEGAL>(pos))
@@ -365,10 +393,10 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner, int trivialP
   // (But at most 100 times, to avoid infinite loops)
   StateInfo st;
   if (MoveList<LEGAL>(pos).size() == 1 && trivialProgressBound < 100)
-    for (const auto& m : MoveList<LEGAL>(pos))
-    {
+    for (const auto& m : MoveList<LEGAL>(pos)) {
       pos.do_move(m, st);
-      bool unwinnable = SemiStatic::is_unwinnable(pos, intendedWinner, trivialProgressBound+1);
+      bool unwinnable = SemiStatic::is_unwinnable(pos, intendedWinner,
+                                                  trivialProgressBound+1);
       pos.undo_move(m);
       return unwinnable;
     }
@@ -379,11 +407,11 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner, int trivialP
 
 // Check if the position is unwinnable in all positions at depth 1 ply
 
-bool SemiStatic::is_unwinnable_after_one_move(Position& pos, Color intendedWinner) {
+bool SemiStatic::is_unwinnable_after_one_move(Position& pos,
+                                              Color intendedWinner) {
 
   StateInfo st;
-  for (const auto& m : MoveList<LEGAL>(pos))
-  {
+  for (const auto& m : MoveList<LEGAL>(pos)) {
     pos.do_move(m,st);
     if (!is_unwinnable(pos, intendedWinner, 0))
       return false;

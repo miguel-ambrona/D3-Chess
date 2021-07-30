@@ -1,6 +1,7 @@
 /*
-  Chess Unwinnability Analyzer, an implementation of a decision procedure for checking
-  whether a certain player can deliver checkmate (i.e. win) in a given chess position.
+  Chess Unwinnability Analyzer, an implementation of a decision procedure for
+  checking whether a certain player can deliver checkmate (i.e. win) in a given
+  chess position.
 
   This software leverages Stockfish as a backend for chess-related functions.
   Stockfish is free software provided under the GNU General Public License
@@ -8,10 +9,12 @@
   The full source code of Stockfish can be found here:
   <https://github.com/official-stockfish/Stockfish>.
 
-  Chess Unwinnability Analyzer is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more details.
+  Chess Unwinnability Analyzer is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GPL for more
+  details.
 */
+
 
 #ifndef CHA_H_INCLUDED
 #define CHA_H_INCLUDED
@@ -73,12 +76,12 @@ namespace CHA {
     uint64_t globalLimit;
   };
 
-  inline void Search::init(){
+  inline void Search::init() {
     totalCounter = 0;
     counter = 0;
   }
 
-  inline void Search::set(Depth maxDepth, uint64_t localNodesLimit){
+  inline void Search::set(Depth maxDepth, uint64_t localNodesLimit) {
     depth = 0;
     maxSearchDepth = maxDepth;
     mateLen = 0;
@@ -109,7 +112,7 @@ namespace CHA {
     return maxSearchDepth;
   }
 
-  inline void Search::annotate_move(Move m){
+  inline void Search::annotate_move(Move m) {
     if (depth < MAX_VARIATION_LENGTH)
       checkmateSequence[depth] = m;
   }
