@@ -89,7 +89,7 @@ running Ubuntu 18.04 LTS.
 |   Average #positions per second |      2930     |    250,000+    |
 |   Positions evaluated in < 2 ms |     96.80%    |      100%      |
 |       Maximum time per position |     195 ms    |     417 μs     |
-| Unwinnable positions identified |  2207 (100%)  |  2207 (100%)   |
+| Unwinnable positions identified |  2205 (100%)  |  2205 (100%)   |
 |            Total execution time |   2 h 42 min  |   1 min 53 s   |
 
 

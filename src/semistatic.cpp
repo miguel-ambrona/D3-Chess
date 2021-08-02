@@ -384,6 +384,10 @@ void SemiStatic::init() {
 bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner,
                                int trivialProgressBound) {
 
+  // Checkmate or Stalemate
+  if (MoveList<LEGAL>(pos).size() == 0)
+    return !pos.checkers() || pos.side_to_move() == intendedWinner;
+
   // If en passant is possible, return false
   for (const auto& m : MoveList<LEGAL>(pos))
     if (type_of(m) == ENPASSANT)
@@ -409,6 +413,10 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner,
 
 bool SemiStatic::is_unwinnable_after_one_move(Position& pos,
                                               Color intendedWinner) {
+
+  // Checkmate or Stalemate
+  if (MoveList<LEGAL>(pos).size() == 0)
+    return !pos.checkers() || pos.side_to_move() == intendedWinner;
 
   StateInfo st;
   for (const auto& m : MoveList<LEGAL>(pos)) {
