@@ -55,14 +55,14 @@ to be used by chess servers with a minimal computational overhead.
 
 We have evaluated CHA 2 over the entire
 [Lichess database](https://database.lichess.org/)
-of standard rated games, which includes 2,552,143,988 games at the moment.
+of standard rated games, which includes 2,640,277,327 games at the moment.
 More concretely, we have applied CHA to the final position of all games that
 ended in a timeout and that were classified as 1-0 or 0-1.
-This represents a total of 807,646,544 games (about 31% of all games) which have
-been analyzed in about 73 hours of CPU time (326 μs per position on average).
+This represents a total of 835,520,183 games (about 31% of all games) which have
+been analyzed in about 76 hours of CPU time (327 μs per position on average).
 
 Our analysis led to identifying a total of
-[70,938](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[73,066](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their
 opponent could not have checkmated them by any possible sequence of legal moves.
@@ -74,23 +74,22 @@ complete, but faster version of our algorithm. Our quick version may terminate
 without having found a helpmate sequence in complex positions, declaring them
 as "probably winnable".
 Consequently, the quick version may fail to find all unwinnable positions.
-In fact, out of the exact 70,938 games that were unfairly classified
-(identified with the full version of CHA), the quick version can identify 70,936
+In fact, out of the exact 73,066 games that were unfairly classified
+(identified with the full version of CHA), the quick version can identify 73,064
 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA
-when analyzing all the timeouts from August 2021 (29,350,661 positions).
+when analyzing all the timeouts from September 2021 (27,873,639 positions).
 All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
 running Ubuntu 18.04 LTS.
 
 |                                 |    Full CHA   |    Quick CHA   |
 |--------------------------------:|:-------------:|:--------------:|
-|       Average time per position |     340 μs    |      3 μs      |
-|   Average #positions per second |      3060     |    250,000+    |
-|   Positions evaluated in < 2 ms |     96.80%    |      100%      |
-|       Maximum time per position |     248 ms    |     463 μs     |
-| Unwinnable positions identified |  2308 (100%)  |  2308 (100%)   |
-|            Total execution time |   2 h 47 min  |   1 min 55 s   |
+|       Average time per position |     337 μs    |      3 μs      |
+|   Average #positions per second |      2960     |    250,000+    |
+|       Maximum time per position |     269 ms    |     778 μs     |
+| Unwinnable positions identified |  2128 (100%)  |  2128 (100%)   |
+|            Total execution time |   2 h 37 min  |   1 min 51 s   |
 
 
 ## Installation & Usage
