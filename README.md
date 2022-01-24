@@ -94,13 +94,16 @@ running Ubuntu 18.04 LTS.
 
 ## Installation & Usage
 
-After cloning the repository, and from the src/ directory,
-get Stockfish by running ```make get-stockfish```.
-Then, run ```make``` to compile the tool.
+After cloning the repository:
 
-You can test the tool by running ```./cha test```.
+1. Install Stockfish. From the `lib/stockfish/` directory, run
+`make get-stockfish` followed by `make` and `make install`.
 
-Otherwise, simply run ```./cha``` to start a process which waits for commands
+2. Compile CHA. From the `src/` directory, run `make`.
+
+You can test the tool by running `./cha test`.
+
+Otherwise, simply run `./cha` to start a process which waits for commands
 from stdin. A command must be a valid
 [FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 position, followed by the intended winner (**white** or **black**).
