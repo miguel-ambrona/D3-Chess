@@ -16,10 +16,10 @@
 */
 
 
-#ifndef CHA_H_INCLUDED
-#define CHA_H_INCLUDED
+#ifndef DYNAMIC_H_INCLUDED
+#define DYNAMIC_H_INCLUDED
 
-namespace CHA {
+namespace DYNAMIC {
 
   enum SearchResult { WINNABLE, UNWINNABLE, UNDETERMINED };
 
@@ -159,8 +159,12 @@ namespace CHA {
     return globalLimit;
   }
 
-  void loop(int argc, char* argv[]);
+  SearchResult full_analysis(Position&, Search&);
 
-} // namespace CHA
+  SearchResult quick_analysis(Position&, Search&);
 
-#endif // #ifndef CHA_H_INCLUDED
+  SearchResult find_shortest(Position&, Search&);
+
+} // namespace DYNAMIC
+
+#endif // #ifndef DYNAMIC_H_INCLUDED

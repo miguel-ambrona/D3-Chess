@@ -15,8 +15,7 @@
   details.
 */
 
-#include "timeman.h"
-#include "uci.h"
+#include "stockfish.h"
 #include "util.h"
 
 constexpr int NONE = 128;  // High enough to go outside of the board

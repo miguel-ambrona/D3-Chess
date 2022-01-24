@@ -13,9 +13,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: make get-stockfish
-      working-directory: ./src
+    - name: Download Stockfish
+      working-directory: ./lib/stockfish
       run: make get-stockfish
+    - name: Compile Stockfish
+      working-directory: ./lib/stockfish
+      run: make
+    - name: Install Stockfish
+      working-directory: ./lib/stockfish
+      run: sudo make install
+    - name: Enable shared libraries
+      run: sudo /sbin/ldconfig -v
     - name: make
       working-directory: ./src
       run: make

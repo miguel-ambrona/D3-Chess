@@ -15,8 +15,7 @@
   details.
 */
 
-#include "timeman.h"
-#include "uci.h"
+#include "stockfish.h"
 #include "util.h"
 #include "semistatic.h"
 

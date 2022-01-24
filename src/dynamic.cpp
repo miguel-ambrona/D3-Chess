@@ -15,13 +15,7 @@
   details.
 */
 
-#include <sstream>
-#include <fstream>
-#include <chrono>
-
-#include "timeman.h"
-#include "tt.h"
-#include "uci.h"
+#include "stockfish.h"
 #include "util.h"
 #include "semistatic.h"
 #include "dynamic.h"
@@ -136,8 +130,8 @@ namespace {
   // winner) is found or the maximum depth is reached. The function returns the
   // ply depth at which checkmate was found or -1 if no mate was found.
 
-  template <CHA::SearchMode MODE, CHA::SearchTarget TARGET>
-  bool find_mate(Position& pos, CHA::Search& search, Depth depth,
+  template <DYNAMIC::SearchMode MODE, DYNAMIC::SearchTarget TARGET>
+  bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
                  bool pastProgress) {
 
     Color winner = search.intended_winner();
@@ -149,7 +143,7 @@ namespace {
     Depth movesLeft = search.max_depth() - depth;
 
     // If the position is found with more depth, we can ignore this branch
-    if (MODE == CHA::FULL) {
+    if (MODE == DYNAMIC::FULL) {
       tte = TT.probe(pos.key(), found);
       if (found && (tte->depth() >= movesLeft))
         return false;
@@ -173,7 +167,7 @@ namespace {
     }
 
     // Store this position in the TT (we then analyze it at depth 'movesLeft')
-    if (MODE == CHA::FULL)
+    if (MODE == DYNAMIC::FULL)
       tte->save(pos.key(), VALUE_NONE, false, BOUND_NONE, movesLeft, MOVE_NONE,
                 VALUE_NONE);
 
@@ -185,7 +179,7 @@ namespace {
     for (const ExtMove& m : MoveList<LEGAL>(pos)) {
       VariationType variation = NORMAL;
 
-      if (TARGET == CHA::ANY) {
+      if (TARGET == DYNAMIC::ANY) {
         PieceType movedPiece = type_of(pos.moved_piece(m));
         Square target = set_target(pos, movedPiece, winner);
 
@@ -215,7 +209,7 @@ namespace {
 
       Depth newDepth = depth + 1;
 
-      if (TARGET == CHA::ANY) {
+      if (TARGET == DYNAMIC::ANY) {
         // Do not reward while Loser has queen(s) if it was their turn
         if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
           variation = (variation = REWARD) ? NORMAL : variation;
@@ -251,10 +245,8 @@ namespace {
     return false;
   }
 
-  // ???
-
   bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
-                              CHA::Search& search) {
+                              DYNAMIC::Search& search) {
 
     // Insufficient material to win
     if (impossible_to_win(pos, winner))
@@ -285,132 +277,108 @@ namespace {
     return true;
   }
 
-  CHA::SearchResult full_analysis(Position& pos, CHA::Search& search) {
+}
 
-    bool mate;
-    search.init();
+DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& search) {
 
-    // Apply a quick search of depth 2 (may be deeper on rewarded variations)
-    search.set(2, 5000);
-    mate = find_mate<CHA::QUICK,CHA::ANY>(pos, search, 0, false);
+  bool mate;
+  search.init();
 
-    if (!search.is_interrupted() && !mate)
-      search.set_unwinnable();
+  // Apply a quick search of depth 2 (may be deeper on rewarded variations)
+  search.set(2, 5000);
+  mate = find_mate<DYNAMIC::QUICK,DYNAMIC::ANY>(pos, search, 0, false);
 
-    if (search.get_result() == CHA::UNDETERMINED)
-      if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
-        search.set_unwinnable();
+  if (!search.is_interrupted() && !mate)
+    search.set_unwinnable();
 
-    if (search.get_result() == CHA::UNDETERMINED) {
-      TT.clear();
-
-      // Apply iterative deepening (find_mate may look deeper than maxDepth on
-      // rewarded variations)
-      for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
-        search.set(maxDepth, 10000); // Local limit of 10000 is empirically good
-        mate = find_mate<CHA::FULL,CHA::ANY>(pos, search, 0, false);
-
-        if (!search.is_interrupted() && !mate)
-          search.set_unwinnable();
-
-        if (search.get_result() != CHA::UNDETERMINED ||
-            search.is_limit_reached())
-          break;
-      }
-    }
-
-    // Careful, the following function modifies the position, we want it for
-    // extreme completeness:
-    // FIXME:
-    // Improve it to arbitrary depth (not just one).
-    // Are there examples where more than depth 1 will be needed?
-    if (search.get_result() == CHA::UNDETERMINED)
-      if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
-        search.set_unwinnable();
-
-    return search.get_result();
-  }
-
-  CHA::SearchResult quick_analysis(Position& pos, CHA::Search& search) {
-
-    search.init();
-    search.set(0,0);
-    bool unwinnable;
-    Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
-    bool onlyPawnsAndBishops = !KRQ;
-    bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
-
-    unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
-
-    bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
-
-    if (blockedCandidate && !unwinnable && onlyPawnsAndBishops)
-      if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
-        unwinnable = true;
-
-    if (blockedCandidate && !unwinnable &&
-        (almostOnlyPawnsAndBishops && pos.checkers()))
-      if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
-        unwinnable = true;
-
-    if (unwinnable)
-      search.set_unwinnable();
-
-    return search.get_result();
-  }
-
-  CHA::SearchResult find_shortest(Position& pos, CHA::Search& search) {
-
-    bool mate;
-    search.init();
-
+  if (search.get_result() == DYNAMIC::UNDETERMINED)
     if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
       search.set_unwinnable();
 
+  if (search.get_result() == DYNAMIC::UNDETERMINED) {
     TT.clear();
-    for (int depth = 1; depth <= 1000; depth++) {
-      search.set(depth, search.get_limit());
-      mate = find_mate<CHA::FULL,CHA::SHORTEST>(pos, search, 0, false);
+
+    // Apply iterative deepening (find_mate may look deeper than maxDepth on
+    // rewarded variations)
+    for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
+      search.set(maxDepth, 10000); // Local limit of 10000 is empirically good
+      mate = find_mate<DYNAMIC::FULL,DYNAMIC::ANY>(pos, search, 0, false);
 
       if (!search.is_interrupted() && !mate)
         search.set_unwinnable();
 
-      if (search.get_result() != CHA::UNDETERMINED || search.is_limit_reached())
+      if (search.get_result() != DYNAMIC::UNDETERMINED ||
+          search.is_limit_reached())
         break;
     }
-
-    return search.get_result();
   }
 
-  // We expect input commands to be a line of text containing a FEN followed by
-  // the intended winner ('white' or 'black') or nothing (the default intended
-  // winner is last player who moved)
+  // Careful, the following function modifies the position, we want it for
+  // extreme completeness:
+  // FIXME:
+  // Improve it to arbitrary depth (not just one).
+  // Are there examples where more than depth 1 will be needed?
+  if (search.get_result() == DYNAMIC::UNDETERMINED)
+    if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
+      search.set_unwinnable();
 
-  Color parse_line(Position& pos, StateInfo* si, std::string& line) {
+  return search.get_result();
+}
 
-    std::string fen, token;
-    std::istringstream iss(line);
+DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& search) {
 
-    while (iss >> token && token != "black" && token != "white")
-      fen += token + " ";
+  search.init();
+  search.set(0,0);
+  bool unwinnable;
+  Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
+  bool onlyPawnsAndBishops = !KRQ;
+  bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
-    pos.set(fen, false, si, Threads.main());
+  unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
 
-    if (token == "white")
-      return WHITE;
+  bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
 
-    else if (token == "black")
-      return BLACK;
+  if (blockedCandidate && !unwinnable && onlyPawnsAndBishops)
+    if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+      unwinnable = true;
 
-    else
-      return ~pos.side_to_move();
+  if (blockedCandidate && !unwinnable &&
+      (almostOnlyPawnsAndBishops && pos.checkers()))
+    if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
+      unwinnable = true;
+
+  if (unwinnable)
+    search.set_unwinnable();
+
+  return search.get_result();
+}
+
+DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos, DYNAMIC::Search& search) {
+
+  bool mate;
+  search.init();
+
+  if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+    search.set_unwinnable();
+
+  TT.clear();
+  for (int depth = 1; depth <= 1000; depth++) {
+    search.set(depth, search.get_limit());
+    mate = find_mate<DYNAMIC::FULL,DYNAMIC::SHORTEST>(pos, search, 0, false);
+
+    if (!search.is_interrupted() && !mate)
+      search.set_unwinnable();
+
+    if (search.get_result() != DYNAMIC::UNDETERMINED || search.is_limit_reached())
+      break;
   }
 
-} // namespace
+  return search.get_result();
+}
 
-// CHA::print_result() prints one line of information about the search.
+// DYNAMIC::print_result() prints one line of information about the search.
 
-void CHA::Search::print_result() const {
+void DYNAMIC::Search::print_result() const {
 
   if (result == WINNABLE) {
     std::cout << "winnable";
@@ -426,115 +394,4 @@ void CHA::Search::print_result() const {
     std::cout << "undetermined";
 
   std::cout << " nodes " << (totalCounter + counter);
-}
-
-/// CHA::loop() waits for a command from stdin or tests file and analyzes it.
-
-void CHA::loop(int argc, char* argv[]) {
-
-  KnightDistance::init();
-  Position pos;
-  std::string token, line;
-  StateListPtr states(new std::deque<StateInfo>(1));
-  bool runningTests = false;
-  bool skipWinnable = false;
-  bool findShortest = false;
-  bool quickAnalysis = false;
-  bool adjudicateTimeout = false;
-  uint64_t globalLimit = 500000;
-
-  for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "test") {
-      runningTests = true;
-      quickAnalysis = true;
-    }
-
-    if (std::string(argv[i]) == "-u")
-      skipWinnable = true;
-
-    if (std::string(argv[i]) == "-min")
-      findShortest = true;
-
-    if (std::string(argv[i]) == "-quick")
-      quickAnalysis = true;
-
-    if (std::string(argv[i]) == "-timeout")
-      adjudicateTimeout = true;
-
-    if (std::string(argv[i]) == "-limit") {
-      std::istringstream iss(argv[i+1]);
-      iss >> globalLimit;
-    }
-  }
-
-  static CHA::Search search = CHA::Search();
-  search.set_limit(globalLimit);
-
-  std::ifstream infile("../tests/lichess-30K-games.txt");
-
-  uint64_t totalPuzzles = 0;
-  uint64_t totalTime = 0;
-  uint64_t maxTime = 0;
-
-  while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
-
-    if (line == "quit")
-      break;
-
-    SearchResult result;
-    Color winner = parse_line(pos, &states->back(), line);
-    search.set_winner(winner);
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    if (findShortest)
-      result = find_shortest(pos, search);
-
-    else if (quickAnalysis)
-      result = quick_analysis(pos, search);
-
-    else
-      result = full_analysis(pos, search);
-
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
-    uint64_t duration = diff.count();
-
-    if (adjudicateTimeout) {
-      if (result == UNWINNABLE)
-        std::cout << "1/2-1/2" << std::endl;
-
-      else if (winner == WHITE)
-        std::cout << "1-0" << std::endl;
-
-      else
-        std::cout << "0-1" << std::endl;
-    }
-    else {
-      // On quick mode, we only print [unwinnable] ([undetermined] are all
-      // guessed to be [winnable]).
-      // On full mode, we print all cases except possibly [winnable].
-      if ((!quickAnalysis || result == UNWINNABLE) &&
-          (!skipWinnable || result != CHA::WINNABLE)) {
-        search.print_result();
-        std::cout << " time " << duration << " (" << line << ")" << std::endl;
-      }
-
-      if (duration > 100 * 1000 * 1000)
-        std::cout << "Hard: " << line << std::endl;
-
-    }
-
-    totalPuzzles++;
-    totalTime += duration;
-    if (duration > maxTime)
-      maxTime = duration;
-  }
-
-  std::cout << "Analyzed " << totalPuzzles << " "
-            << "positions in " << totalTime/1000/1000 << " ms "
-            << "(avg: " << totalTime/totalPuzzles/1000 << " us; "
-            << "max: " << maxTime/1000 << " us)" << std::endl;
-
-  Threads.stop = true;
 }
