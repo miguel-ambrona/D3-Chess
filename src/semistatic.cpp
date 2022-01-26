@@ -164,7 +164,7 @@ void SemiStatic::System::saturate(Position& pos) {
 
                 Piece tpiece = pos.piece_on(target);
 
-                if (color_of(tpiece) != c && type_of(tpiece) == PAWN
+                if (type_of(tpiece) == PAWN && color_of(tpiece) != c
                     && file_of(source) == file_of(target)) {
                   bool confronting = true;
                   for (Square aux = SQ_A1; aux <= SQ_H8; ++aux) {

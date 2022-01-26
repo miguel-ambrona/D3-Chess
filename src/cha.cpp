@@ -51,6 +51,8 @@ Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 void loop(int argc, char* argv[]) {
 
   KnightDistance::init();
+  SemiStatic::init();
+
   Position pos;
   std::string token, line;
   StateListPtr states(new std::deque<StateInfo>(1));
