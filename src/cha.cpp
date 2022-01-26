@@ -44,7 +44,7 @@ Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 
   else
     return ~pos.side_to_move();
-};
+}
 
 // loop() waits for a command from stdin or tests file and analyzes it.
 
@@ -157,7 +157,7 @@ void loop(int argc, char* argv[]) {
             << "max: " << maxTime/1000 << " us)" << std::endl;
 
   Threads.stop = true;
-};
+}
 
 int main(int argc, char* argv[]) {
 
@@ -169,4 +169,4 @@ int main(int argc, char* argv[]) {
 
   Threads.set(0);
   return 0;
-};
+}

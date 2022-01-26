@@ -14,6 +14,6 @@
 #  details.
 
 cha:
-	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp -I/usr/local/include/stockfish -lstockfish
+	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
 
 .PHONY: cha
