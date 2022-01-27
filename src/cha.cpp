@@ -19,8 +19,29 @@
 #include "util.h"
 #include "semistatic.h"
 #include "dynamic.h"
+#include "cha.h"
 #include <sstream>
 #include <fstream>
+
+
+void CHA::init() {
+  KnightDistance::init();
+  SemiStatic::init();
+};
+
+bool CHA::is_dead(Position& pos) {
+  static DYNAMIC::Search search = DYNAMIC::Search();
+  search.set_limit(5000000);
+
+  search.set_winner(WHITE);
+  DYNAMIC::SearchResult result = DYNAMIC::quick_analysis(pos, search);
+
+  if (result != DYNAMIC::UNWINNABLE)
+    return false;
+
+  search.set_winner(BLACK);
+  return DYNAMIC::UNWINNABLE == DYNAMIC::quick_analysis(pos, search);
+};
 
 // We expect input commands to be a line of text containing a FEN followed by
 // the intended winner ('white' or 'black') or nothing (the default intended
@@ -50,8 +71,7 @@ Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 
 void loop(int argc, char* argv[]) {
 
-  KnightDistance::init();
-  SemiStatic::init();
+  CHA::init();
 
   Position pos;
   std::string token, line;

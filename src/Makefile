@@ -16,4 +16,12 @@
 cha:
 	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
 
+cha-lib:
+	g++ -shared -o libcha.so util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish -fPIC
+
+install:
+	cp libcha.so /usr/local/lib
+	mkdir -p /usr/local/include/cha
+	cp *.h /usr/local/include/cha/
+
 .PHONY: cha
