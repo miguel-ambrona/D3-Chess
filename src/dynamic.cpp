@@ -514,14 +514,14 @@ void CHA::loop(int argc, char* argv[]) {
       // On quick mode, we only print [unwinnable] ([undetermined] are all
       // guessed to be [winnable]).
       // On full mode, we print all cases except possibly [winnable].
-      if ((!quickAnalysis || result == UNWINNABLE) &&
-          (!skipWinnable || result != CHA::WINNABLE)) {
-        search.print_result();
-        std::cout << " time " << duration << " (" << line << ")" << std::endl;
-      }
+      //if ((!quickAnalysis || result == UNWINNABLE) &&
+      //(!skipWinnable || result != CHA::WINNABLE)) {
+      //search.print_result();
+      std::cout << duration << std::endl;//<< " (" << line << ")" << std::endl;
+      //}
 
-      if (duration > 100 * 1000 * 1000)
-        std::cout << "Hard: " << line << std::endl;
+      //if (duration > 100 * 1000 * 1000)
+      //std::cout << "Hard: " << line << std::endl;
 
     }
 
