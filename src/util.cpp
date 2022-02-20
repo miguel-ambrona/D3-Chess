@@ -75,6 +75,16 @@ Square UTIL::find_king(Position& pos, Color c) {
   return s;
 }
 
+// Returns the number of white pawns that are blocked by a black pawn
+
+int UTIL::nb_blocked_pawns(Position& pos) {
+
+  Bitboard whitePawns = pos.pieces(WHITE, PAWN);
+  Bitboard blackPawns = pos.pieces(BLACK, PAWN);
+
+  return popcount(whitePawns << 8 & blackPawns);
+}
+
 // A pawn is said to be "lonely" if there are no opponent pawns in its file
 
 bool UTIL::has_lonely_pawns(Position& pos) {
@@ -94,6 +104,26 @@ bool UTIL::has_lonely_pawns(Position& pos) {
   }
 
   return whitePawnOcc != blackPawnOcc;
+}
+
+// Looks for a two opposing pawns with just a square in between.
+// Returns true if found and set target to the square in between.
+// Returns false if not found.
+
+bool UTIL::semi_blocked_target(Position &pos, Square &target) {
+
+  Bitboard whitePawns = pos.pieces(WHITE, PAWN);
+  Bitboard blackPawns = pos.pieces(BLACK, PAWN);
+
+  Bitboard inBetween = whitePawns << 8 & blackPawns >> 8;
+
+  for (Square s = SQ_A3; s <= SQ_H6; ++s)
+    if (inBetween & s) {
+      target = s;
+      return true;
+    }
+
+  return false;
 }
 
 bool UTIL::is_corner(Square s) {

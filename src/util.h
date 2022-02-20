@@ -24,7 +24,9 @@ namespace UTIL {
   void unmove(Square *presquares, PieceType p, Color c, Square s);
   Bitboard neighbours(Square s);
   Square find_king(Position& pos, Color c);
+  int nb_blocked_pawns(Position& pos);
   bool has_lonely_pawns(Position& pos);
+  bool semi_blocked_target(Position& pos, Square &target);
 
   bool is_corner(Square s);
 

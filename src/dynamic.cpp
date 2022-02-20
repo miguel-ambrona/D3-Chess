@@ -62,9 +62,9 @@ namespace {
   // for "slow" pieces). (It will be used to check if the position is getting
   // closer to the targetted mate.)
 
-  bool going_to_square(Move m, Square s, PieceType p) {
+  bool going_to_square(Move m, Square s, PieceType p, bool checkBishops) {
 
-    if (p == KING)
+    if (p == KING || (checkBishops && p == BISHOP))
       return distance<Square>(to_sq(m), s) < distance<Square>(from_sq(m), s);
 
     else if (p == KNIGHT)
@@ -132,7 +132,7 @@ namespace {
 
   template <DYNAMIC::SearchMode MODE, DYNAMIC::SearchTarget TARGET>
   bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
-                 bool pastProgress) {
+                 bool pastProgress, bool wasSemiBlocked) {
 
     Color winner = search.intended_winner();
     Color loser = ~winner;
@@ -175,6 +175,11 @@ namespace {
     bool needLoserPromotion = need_loser_promotion(pos, winner);
     bool isWinnersTurn = pos.side_to_move() == winner;
 
+    Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
+    bool onlyPawnsAndBishops = !KRQ;
+    Square unblocking_target;
+    bool semiBlocked = UTIL::semi_blocked_target(pos, unblocking_target);
+
     // Iterate over all legal moves
     for (const ExtMove& m : MoveList<LEGAL>(pos)) {
       VariationType variation = NORMAL;
@@ -185,7 +190,7 @@ namespace {
 
         if (isWinnersTurn) {
           if (pos.advanced_pawn_push(m) || pos.capture(m) ||
-              going_to_square(m, target, movedPiece))
+              going_to_square(m, target, movedPiece, false))
             variation = REWARD;
         }
         else {
@@ -195,11 +200,43 @@ namespace {
             variation = (movedPiece == PAWN && !heavyProm) ? REWARD : PUNISH;
           }
 
-          if (going_to_square(m, target, movedPiece))
+          if (going_to_square(m, target, movedPiece, false))
             variation = REWARD;
 
           if (pos.capture(m))
             variation = PUNISH;
+        }
+      }
+
+      // Heuristic for semi-blocked positions
+      if (onlyPawnsAndBishops
+          && UTIL::nb_blocked_pawns(pos) >= 4
+          && !UTIL::has_lonely_pawns(pos)) {
+
+        PieceType movedPiece = type_of(pos.moved_piece(m));
+
+        if (semiBlocked || wasSemiBlocked) {
+
+          if (pos.capture(m) && isWinnersTurn)
+            variation = REWARD;
+
+          else if (movedPiece == KING) {
+            variation = NORMAL;
+
+            if (semiBlocked && going_to_square(m, unblocking_target, movedPiece, false))
+              variation = REWARD;
+          }
+
+          else
+            variation = PUNISH;
+        }
+
+        // Not semi-blocked
+        else {
+          Square target = set_target(pos, movedPiece, winner);
+          if (going_to_square(m, target, movedPiece, true) &&
+              popcount(pos.pieces(loser, BISHOP)) > 1)
+            variation = REWARD;
         }
       }
 
@@ -212,6 +249,10 @@ namespace {
       if (TARGET == DYNAMIC::ANY) {
         // Do not reward while Loser has queen(s) if it was their turn
         if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
+          variation = (variation = REWARD) ? NORMAL : variation;
+
+        // Do not reward after a certain depth
+        if (search.actual_depth() > 300)
           variation = (variation = REWARD) ? NORMAL : variation;
 
         switch (variation) {
@@ -232,7 +273,9 @@ namespace {
       search.step();
 
       int checkMate =
-        find_mate<MODE,TARGET>(pos, search, newDepth, variation == REWARD);
+        find_mate<MODE,TARGET>(pos, search, newDepth,
+                               variation == REWARD,
+                               (semiBlocked || wasSemiBlocked));
 
       search.undo_step();
       pos.undo_move(m);
@@ -286,7 +329,7 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
 
   // Apply a quick search of depth 2 (may be deeper on rewarded variations)
   search.set(2, 5000);
-  mate = find_mate<DYNAMIC::QUICK,DYNAMIC::ANY>(pos, search, 0, false);
+  mate = find_mate<DYNAMIC::QUICK,DYNAMIC::ANY>(pos, search, 0, false, false);
 
   if (!search.is_interrupted() && !mate)
     search.set_unwinnable();
@@ -302,7 +345,7 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
     // rewarded variations)
     for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
       search.set(maxDepth, 10000); // Local limit of 10000 is empirically good
-      mate = find_mate<DYNAMIC::FULL,DYNAMIC::ANY>(pos, search, 0, false);
+      mate = find_mate<DYNAMIC::FULL,DYNAMIC::ANY>(pos, search, 0, false, false);
 
       if (!search.is_interrupted() && !mate)
         search.set_unwinnable();
@@ -336,7 +379,9 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& se
 
   unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
 
-  bool blockedCandidate = !UTIL::has_lonely_pawns(pos);
+  bool blockedCandidate =
+    UTIL::nb_blocked_pawns(pos) >= 1 &&
+    !UTIL::has_lonely_pawns(pos);
 
   if (blockedCandidate && !unwinnable && onlyPawnsAndBishops)
     if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
@@ -364,7 +409,7 @@ DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos, DYNAMIC::Search& sea
   TT.clear();
   for (int depth = 1; depth <= 1000; depth++) {
     search.set(depth, search.get_limit());
-    mate = find_mate<DYNAMIC::FULL,DYNAMIC::SHORTEST>(pos, search, 0, false);
+    mate = find_mate<DYNAMIC::FULL,DYNAMIC::SHORTEST>(pos, search, 0, false, false);
 
     if (!search.is_interrupted() && !mate)
       search.set_unwinnable();
