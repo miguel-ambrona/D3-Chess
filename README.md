@@ -124,11 +124,11 @@ When "winnable", a helpmate sequence in UCI format is provided.
 For example:
 
 > **./cha**<br>
-> Chess Unwinnability Analyzer (CHA) version 2.4<br>
+> Chess Unwinnability Analyzer (CHA) version 2.5<br>
 > **Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -**<br>
-> winnable e8d8 b7a6 d8e8 a8b7 e8d8 b7c8 d8e8 c8d7 e8d8 d7e8 d8c8 g4g5 c8d8 e8f7 d8c8 f7g8 c8d8 a6b7 d8e8 b7c8 a5a4 g8f7# nodes 5055 time 7636944 (Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -)<br>
+> winnable e8d8 b7a6 d8e8 a8b7 e8d8 b7c8 d8e8 c8d7 e8d8 d7e8 d8c8 g4g5 c8d8 e8f7 d8c8 f7g8 c8d8 a6b7 d8e8 b7c8 a5a4 g8f7# nodes 14175 time 24316412 (Bb2kb2/bKp1p1p1/1pP1P1P1/pP6/6P1/P7/8/8 b - -)<br>
 > **7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black**<br>
-> unwinnable nodes 10101 time 6665368 (7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black)
+> unwinnable nodes 10101 time 7285396 (7b/1k5B/7b/8/1p1p1p1p/1PpP1P1P/2P3K1/N7 b - - black)
 
 There are a few of options you may choose when calling ./cha:
 
@@ -147,9 +147,9 @@ in the search.
 Other examples:
 
 > **./cha -min -limit 1000000**<br>
-> Chess Unwinnability Analyzer (CHA) version 2.4<br>
+> Chess Unwinnability Analyzer (CHA) version 2.5<br>
 > **8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white**<br>
-> winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 705679 time 136044908 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
+> winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 705679 time 166669006 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
 
 Enjoy!
 

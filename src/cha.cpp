@@ -160,8 +160,8 @@ void loop(int argc, char* argv[]) {
         std::cout << " time " << duration << " (" << line << ")" << std::endl;
       }
 
-      if (duration > 100 * 1000 * 1000)
-        std::cout << "Hard: " << line << std::endl;
+      //if (duration > 100 * 1000 * 1000)
+      //std::cout << "Hard: " << line << std::endl;
 
     }
 
@@ -182,7 +182,7 @@ void loop(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 
   init_stockfish();
-  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.4" << std::endl;
+  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.5" << std::endl;
 
   CommandLine::init(argc, argv);
   loop(argc, argv);
