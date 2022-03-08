@@ -55,14 +55,14 @@ to be used by chess servers with a minimal computational overhead.
 
 We have evaluated CHA 2 over the entire
 [Lichess database](https://database.lichess.org/)
-of standard rated games, which includes 3,013,194,626 games at the moment.
+of standard rated games, which includes 3,099,534,127 games at the moment.
 More concretely, we have applied CHA to the final position of all games that
 ended in a timeout and that were classified as 1-0 or 0-1.
-This represents a total of 953,902,719 games (about 31% of all games) which have
-been analyzed in about 85 hours of CPU time (323 μs per position on average).
+This represents a total of 981,467,875 games (about 31% of all games) which have
+been analyzed in about 88 hours of CPU time (323 μs per position on average).
 
 Our analysis led to identifying a total of
-[81,999](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[84,100](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their
 opponent could not have checkmated them by any possible sequence of legal moves.
@@ -74,8 +74,8 @@ complete, but faster version of our algorithm. Our quick version may terminate
 without having found a helpmate sequence in complex positions, declaring them
 as "probably winnable".
 Consequently, the quick version may fail to find all unwinnable positions.
-In fact, out of the exact 81,999 games that were unfairly classified
-(identified with the full version of CHA), the quick version can identify 81,996
+In fact, out of the exact 84,100 games that were unfairly classified
+(identified with the full version of CHA), the quick version can identify 84,097
 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA
