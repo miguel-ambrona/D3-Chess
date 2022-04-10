@@ -388,7 +388,7 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& se
       unwinnable = true;
 
   if (blockedCandidate && !unwinnable &&
-      (almostOnlyPawnsAndBishops && pos.checkers()))
+      (almostOnlyPawnsAndBishops && (pos.checkers() || pos.pieces(KNIGHT))))
     if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
       unwinnable = true;
 
