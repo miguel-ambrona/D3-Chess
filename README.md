@@ -1,21 +1,18 @@
-# [Chess Unwinnability Analyzer 2](https://elrubiongamma.ddns.net/chess-unwinnability-analyzer/) <img src="https://miguel-ambrona.github.io/img/cha.png" width="70px" align="right">
+# [Chess Unwinnability Analyzer (CHA)](https://chasolver.org) <img src="https://miguel-ambrona.github.io/img/cha.png" width="70px" align="right">
 
 [![Tests](https://github.com/miguel-ambrona/D3-Chess/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/miguel-ambrona/D3-Chess/actions/workflows/c-cpp.yml)
 
-Chess Unwinnability Analyzer is a free and open-source implementation of a
+CHA is a free and open-source implementation of a
 decision procedure for *checking whether there exists a sequence of legal moves
 that allows a certain player to checkmate their opponent*
 in a given chess position.
-
-Due to an early name of this project, we will refer to this tool as CHA,
-which stands for *Chess Helpmate Analyzer*.
 
 (Although the unwinnability decision algorithm implemented in this tool is
 completely original, we use
 [Stockfish](https://github.com/official-stockfish/Stockfish) as a back end
 for move generation and chess-related functions.)
 
-## What is this useful for?
+## What is this tool useful for?
 
 This tool can be used to rigorously (and automatically) apply Article 6.9 of the
 [FIDE Laws of Chess](https://www.fide.com/FIDE/handbook/LawsOfChess.pdf):
@@ -31,25 +28,10 @@ Which in shorter English would read as:
 This is a (relatively unknown) generalization of the folklore rule that says
 that when you just have the king, you cannot win anymore, not even on the clock.
 
-See [this page](https://elrubiongamma.ddns.net/chess-unwinnability-analyzer/about.html)
+See [this page](https://chasolver.org)
 for more details about the problem of correctly applying Article 6.9 and to
 know more about this tool.
 
-
-## This tool
-
-CHA can decide unwinnability in *all chess positions* and is *efficient* enough
-to be used by chess servers with a minimal computational overhead.
-
- * CHA is designed to be *sound*, this means that (ignoring possible
- implementation bugs) *CHA will never declare a position as "unwinnable" if
- the position is indeed winnable*.
-
- * CHA is also *complete* (if run without a depth limit), this means that
- it will always find a helpmate sequence if it exists.
- CHA performs extremely well in real games, but artificially designed positions
- can potentially make the analysis reach the default search limit.
- I challenge you to find a position like this!
 
 ## Results
 
