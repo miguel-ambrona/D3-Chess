@@ -61,17 +61,18 @@ In fact, out of the exact 84,100 games that were unfairly classified
 of them.
 
 Below, we present a comparison of the performance of the two versions of CHA
-when analyzing all the timeouts from September 2021 (27,873,639 positions).
+when analyzing all the timeouts from January 2022 (32,599,280 positions).
 All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
-running Ubuntu 18.04 LTS.
+running Ubuntu 20.04 LTS.
 
 |                                 |    Full CHA   |    Quick CHA   |
 |--------------------------------:|:-------------:|:--------------:|
-|       Average time per position |     337 μs    |      3 μs      |
-|   Average #positions per second |      2960     |    250,000+    |
-|       Maximum time per position |     269 ms    |     778 μs     |
-| Unwinnable positions identified |  2128 (100%)  |  2128 (100%)   |
-|            Total execution time |   2 h 37 min  |   1 min 51 s   |
+|   Average #positions per second |      2700     |    200,000+    |
+|       Average time per position |     370 μs    |     4.96 μs    |
+|              Standard deviation |    1270 μs    |     9.06 μs    |
+|       Maximum time per position |     141 ms    |     586 μs     |
+| Unwinnable positions identified |  2462 (100%)  |  2462 (100%)   |
+|            Total execution time |   3 h 21 min  |   2 min 42 s   |
 
 
 ## Installation & Usage
