@@ -380,8 +380,7 @@ void SemiStatic::init() {
 
 // Check if the position is semistatically unwinnable.
 
-bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner,
-                               int trivialProgressBound) {
+bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner) {
 
   // Checkmate or Stalemate
   if (MoveList<LEGAL>(pos).size() == 0)
@@ -391,18 +390,6 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner,
   for (const auto& m : MoveList<LEGAL>(pos))
     if (type_of(m) == ENPASSANT)
       return false;
-
-  // Trivial progress: as long as there is only one legal move, make that move
-  // (But at most 100 times, to avoid infinite loops)
-  StateInfo st;
-  if (MoveList<LEGAL>(pos).size() == 1 && trivialProgressBound < 100)
-    for (const auto& m : MoveList<LEGAL>(pos)) {
-      pos.do_move(m, st);
-      bool unwinnable = SemiStatic::is_unwinnable(pos, intendedWinner,
-                                                  trivialProgressBound+1);
-      pos.undo_move(m);
-      return unwinnable;
-    }
 
   SYSTEM.saturate(pos);
   return SYSTEM.is_unwinnable(pos, intendedWinner);
@@ -420,7 +407,7 @@ bool SemiStatic::is_unwinnable_after_one_move(Position& pos,
   StateInfo st;
   for (const auto& m : MoveList<LEGAL>(pos)) {
     pos.do_move(m,st);
-    if (!is_unwinnable(pos, intendedWinner, 0))
+    if (!is_unwinnable(pos, intendedWinner))
       return false;
     pos.undo_move(m);
   }

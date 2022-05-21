@@ -130,6 +130,19 @@ bool UTIL::is_corner(Square s) {
   return (s == SQ_A1 || s == SQ_H1 || s == SQ_A8 || s == SQ_H8);
 }
 
+
+// Trivial progress: as long as there is only one legal move, make that move
+// (But at most a limited number of times, to avoid infinite loops)
+
+void UTIL::trivial_progress(Position& pos, StateInfo& st, int repetitions) {
+  if (MoveList<LEGAL>(pos).size() == 1 && repetitions > 0)
+    for (const auto& m : MoveList<LEGAL>(pos)) {
+      pos.do_move(m, st);
+      trivial_progress(pos, st, repetitions - 1);
+    }
+}
+
+
 // The next function computes the knight distance between two squares.
 // Note that this can be calculated from just the rank distance and
 // the file distance between the squares, following the tables:
@@ -198,4 +211,3 @@ void KnightDistance::init() {
 int KnightDistance::get(Square x, Square y) {
   return KnightDistanceTable[index(x, y)];
 }
-

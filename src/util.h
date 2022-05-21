@@ -30,6 +30,8 @@ namespace UTIL {
 
   bool is_corner(Square s);
 
+  void trivial_progress(Position& pos, StateInfo& st, int repetitions);
+
 } // namespace UTIL
 
 

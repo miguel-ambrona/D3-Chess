@@ -334,9 +334,12 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
   if (!search.is_interrupted() && !mate)
     search.set_unwinnable();
 
-  if (search.get_result() == DYNAMIC::UNDETERMINED)
-    if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+  if (search.get_result() == DYNAMIC::UNDETERMINED) {
+    StateInfo st;
+    UTIL::trivial_progress(pos, st, 100);
+    if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       search.set_unwinnable();
+  }
 
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
     TT.clear();
@@ -377,6 +380,8 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& se
   bool onlyPawnsAndBishops = !KRQ;
   bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
+  StateInfo st;
+  UTIL::trivial_progress(pos, st, 100);
   unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
 
   bool blockedCandidate =
@@ -384,7 +389,7 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& se
     !UTIL::has_lonely_pawns(pos);
 
   if (blockedCandidate && !unwinnable && onlyPawnsAndBishops)
-    if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+    if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       unwinnable = true;
 
   if (blockedCandidate && !unwinnable &&
@@ -403,7 +408,7 @@ DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos, DYNAMIC::Search& sea
   bool mate;
   search.init();
 
-  if (SemiStatic::is_unwinnable(pos, search.intended_winner(), 0))
+  if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
     search.set_unwinnable();
 
   TT.clear();
