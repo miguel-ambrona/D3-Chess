@@ -296,8 +296,14 @@ namespace {
       return true;
 
     // Checkmate!
-    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers())
-      return pos.side_to_move() == winner;
+    if (MoveList<LEGAL>(pos).size() == 0 && pos.checkers()) {
+      if (pos.side_to_move() == winner){
+        return true;
+      } else {
+        search.set_winnable();
+        return false;
+      }
+    }
 
     // Maximum depth reached
     if (depth <= 0)
@@ -308,9 +314,11 @@ namespace {
 
       StateInfo st;
       pos.do_move(m, st);
+      search.annotate_move(m);
       search.step();
       bool unwinnable = dynamically_unwinnable(pos, depth-1, winner, search);
       pos.undo_move(m);
+      search.undo_step();
 
       if (!unwinnable)
         return false;
