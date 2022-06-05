@@ -249,11 +249,11 @@ namespace {
       if (TARGET == DYNAMIC::ANY) {
         // Do not reward while Loser has queen(s) if it was their turn
         if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
-          variation = (variation = REWARD) ? NORMAL : variation;
+          variation = (variation == REWARD) ? NORMAL : variation;
 
         // Do not reward after a certain depth
         if (search.actual_depth() > 300)
-          variation = (variation = REWARD) ? NORMAL : variation;
+          variation = (variation == REWARD) ? NORMAL : variation;
 
         switch (variation) {
           case REWARD:
