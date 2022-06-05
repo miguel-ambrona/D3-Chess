@@ -16,6 +16,22 @@
 cha:
 	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
 
+test:
+	g++ -o test util.cpp semistatic.cpp dynamic.cpp test.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
+
+run-test:
+	echo "---------------- Test vectors ----------------" > /tmp/test.output
+	cat ../tests/test-vector.txt | ./test >> /tmp/test.output
+	tail -n 11 /tmp/test.output
+	echo "\n---------------- Test lichess ----------------" >> /tmp/test.output
+	curl -C - -o /tmp/lichess-65536.txt https://chasolver.org/lichess-65536.txt
+	cat /tmp/lichess-65536.txt | ./test >> /tmp/test.output
+	tail -n 11 /tmp/test.output
+	diff test.output /tmp/test.output
+
+promote-output:
+	cp /tmp/test.output test.output
+
 cha-lib:
 	g++ -shared -o libcha.so util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish -fPIC
 
@@ -24,4 +40,4 @@ install:
 	mkdir -p /usr/local/include/cha
 	cp *.h /usr/local/include/cha/
 
-.PHONY: cha
+.PHONY: cha test

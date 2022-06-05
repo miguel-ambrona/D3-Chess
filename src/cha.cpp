@@ -45,7 +45,7 @@ bool CHA::is_dead(Position& pos) {
 
 // We expect input commands to be a line of text containing a FEN followed by
 // the intended winner ('white' or 'black') or nothing (the default intended
-// winner is last player who moved)
+// winner is the last player who moved)
 
 Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 

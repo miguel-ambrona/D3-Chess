@@ -337,11 +337,13 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
     StateInfo st;
     UTIL::trivial_progress(pos, st, 100);
+    search.set_flag(DYNAMIC::STATIC);
     if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       search.set_unwinnable();
   }
 
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
+    search.set_flag(DYNAMIC::POST_STATIC);
     TT.clear();
 
     // Apply iterative deepening (find_mate may look deeper than maxDepth on

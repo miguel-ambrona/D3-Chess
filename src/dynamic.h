@@ -26,6 +26,8 @@ namespace DYNAMIC {
   enum SearchMode   { FULL, QUICK };
   enum SearchTarget { ANY, SHORTEST };
 
+  enum SearchFlag   { PRE_STATIC, STATIC, POST_STATIC };
+
   constexpr int MAX_VARIATION_LENGTH = 2000;
 
   // Search class stores information relative to the helpmate search
@@ -49,6 +51,7 @@ namespace DYNAMIC {
     void undo_step();
     void set_winnable();
     void set_unwinnable();
+    void set_flag(SearchFlag searchFlag);
     void interrupt();
 
     bool is_interrupted() const;
@@ -56,7 +59,9 @@ namespace DYNAMIC {
     bool is_limit_reached() const;
 
     SearchResult get_result() const;
+    SearchFlag get_flag() const;
     uint64_t get_limit() const;
+    uint64_t get_nb_nodes() const;
 
     void print_result() const;
 
@@ -69,6 +74,7 @@ namespace DYNAMIC {
     Depth maxSearchDepth;
     Depth mateLen;
     SearchResult result;
+    SearchFlag flag;
     bool interrupted;
     uint64_t counter;
     uint64_t totalCounter;
@@ -79,6 +85,7 @@ namespace DYNAMIC {
   inline void Search::init() {
     totalCounter = 0;
     counter = 0;
+    flag = PRE_STATIC;
   }
 
   inline void Search::set(Depth maxDepth, uint64_t localNodesLimit) {
@@ -135,6 +142,10 @@ namespace DYNAMIC {
     result = UNWINNABLE;
   }
 
+  inline void Search::set_flag(SearchFlag searchFlag) {
+    flag = searchFlag;
+  }
+
   inline void Search::interrupt() {
     interrupted = true;
   }
@@ -157,6 +168,14 @@ namespace DYNAMIC {
 
   inline uint64_t Search::get_limit() const {
     return globalLimit;
+  }
+
+  inline uint64_t Search::get_nb_nodes() const {
+    return totalCounter + counter;
+  }
+
+  inline SearchFlag Search::get_flag() const {
+    return flag;
   }
 
   SearchResult full_analysis(Position&, Search&);
