@@ -95,10 +95,10 @@ undetermined nodes 1175968 (WB 8/p1p1p1p1/6P1/6PK/6PP/8/P1P1P3/7k w - - white)
 undetermined nodes 1264000 (WB 8/p1p1p1p1/6P1/6PK/6PP/8/P1P1P3/7k w - - black)
 undetermined nodes 1207169 (WB 8/8/5p2/2p1pPk1/2PbP1Bb/2pBp1p1/2P1P1P1/5BRK b - - white)
 undetermined nodes 1260870 (WB 8/8/5p2/2p1pPk1/2PbP1Bb/2pBp1p1/2P1P1P1/5BRK b - - black)
-undetermined nodes 1214623 (WB 8/7k/5p2/2p1pP2/2PbP1B1/2pBp1p1/2P1P1P1/5BbK b - - white)
+undetermined nodes 1219039 (WB 8/7k/5p2/2p1pP2/2PbP1B1/2pBp1p1/2P1P1P1/5BbK b - - white)
 undetermined nodes 1277900 (-- 1k6/8/3p1p2/3PbP2/2KpBp2/3P1P2/2B5/8 b - - white)
 undetermined nodes 1204019 (-- 1k6/8/3p1p2/3PbP2/2KpBp2/3P1P2/2B5/8 b - - black)
-undetermined nodes 1201905 (WB 3kBbB1/b1pBbBp1/1pPpPpP1/1P1P1P2/8/8/6K1/8 w - - black)
+undetermined nodes 1201375 (WB 3kBbB1/b1pBbBp1/1pPpPpP1/1P1P1P2/8/8/6K1/8 w - - black)
 undetermined nodes 1170756 (-- 2B1B1B1/pBpBpBpB/P1P1P1P1/4k3/8/8/4K3/8 w - - white)
 undetermined nodes 1201758 (-- 2B1B1B1/pBpBpBpB/P1P1P1P1/4k3/8/8/4K3/8 w - - black)
 undetermined nodes 1201512 (WB 8/6p1/5pPp/p1k1pP1P/Pp1pP1K1/1PpP1B2/2P1R1R1/N7 w - - white)
@@ -114,10 +114,10 @@ undetermined nodes 1201252 (WB k1b5/1p1p4/1P1P1K2/8/8/B7/8/1b6 w - - black)
 undetermined nodes 1201445 (WB k1b5/1p1pK3/1P1P4/8/8/8/bB6/8 b - - black)
 undetermined nodes 1202149 (-- 4K3/2p1p3/2PbP3/2pBp3/2PbP3/2pBp3/2PbP3/4k3 b - - white)
 undetermined nodes 1202239 (-- 4K3/2p1p3/2PbP3/2pBp3/2PbP3/2pBp3/2PbP3/4k3 b - - black)
-undetermined nodes 1206640 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - white)
+undetermined nodes 1206692 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - white)
 undetermined nodes 1201791 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - black)
 undetermined nodes 1201509 (-- 4k3/8/3p1p2/3PbP2/3pBp2/3P1P2/4B3/4K3 w - - white)
-undetermined nodes 1205303 (-- 4k3/8/3p1p2/3PbP2/3pBp2/3P1P2/4B3/4K3 w - - black)
+undetermined nodes 1205423 (-- 4k3/8/3p1p2/3PbP2/3pBp2/3P1P2/4B3/4K3 w - - black)
 undetermined nodes 1189826 (-- k7/2K5/3p1p2/3PbP2/3pBp2/3P1P2/4B3/8 w - - white)
 undetermined nodes 1205270 (-- k7/2K5/3p1p2/3PbP2/3pBp2/3P1P2/4B3/8 w - - black)
 undetermined nodes 1236155 (-- k7/3B4/K2p1p2/3PbP2/3pBp2/3P1P2/8/8 w - - white)
@@ -147,13 +147,13 @@ undetermined nodes 1235422 (-- 5b2/8/7p/5p1P/5p1K/5Pp1/6P1/5kb1 b - - black)
 POSITIONS COUNT:
      solved: 2529/2672
    unsolved: 143
- pre-static: 775
-     static: 616
-post-static: 1138
+ pre-static: 763
+     static: 619
+post-static: 1147
 
 NODES COUNT:
-total nodes: 88537911
-nodes (avg): 33135
+total nodes: 88194836
+nodes (avg): 33007
 nodes (max): 1308548
 
 ---------------- Test Lichess ----------------
@@ -162,11 +162,11 @@ Chess Unwinnability Analyzer (CHA) version 2.5
 POSITIONS COUNT:
      solved: 131072/131072
    unsolved: 0
- pre-static: 121745
+ pre-static: 127006
      static: 4
-post-static: 9323
+post-static: 4062
 
 NODES COUNT:
-total nodes: 271680644
-nodes (avg): 2072
-nodes (max): 250354
+total nodes: 143711484
+nodes (avg): 1096
+nodes (max): 300722

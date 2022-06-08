@@ -247,12 +247,8 @@ namespace {
       Depth newDepth = depth + 1;
 
       if (TARGET == DYNAMIC::ANY) {
-        // Do not reward while Loser has queen(s) if it was their turn
-        if (!isWinnersTurn && popcount(pos.pieces(loser, QUEEN)) > 0)
-          variation = (variation == REWARD) ? NORMAL : variation;
-
         // Do not reward after a certain depth
-        if (search.actual_depth() > 300)
+        if (search.actual_depth() > 400)
           variation = (variation == REWARD) ? NORMAL : variation;
 
         switch (variation) {
