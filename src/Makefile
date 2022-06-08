@@ -23,7 +23,7 @@ run-test:
 	echo "---------------- Test vectors ----------------" > /tmp/test.output
 	cat ../tests/test-vector.txt | ./test >> /tmp/test.output
 	tail -n 11 /tmp/test.output
-	echo "\n---------------- Test lichess ----------------" >> /tmp/test.output
+	echo "\n---------------- Test Lichess ----------------" >> /tmp/test.output
 	curl -C - -o /tmp/lichess-65536.txt https://chasolver.org/lichess-65536.txt
 	cat /tmp/lichess-65536.txt | ./test >> /tmp/test.output
 	tail -n 11 /tmp/test.output
