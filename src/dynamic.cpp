@@ -203,7 +203,7 @@ namespace {
           if (going_to_square(m, target, movedPiece, false))
             variation = REWARD;
 
-          if (pos.capture(m))
+          else if (pos.capture(m))
             variation = PUNISH;
         }
       }
