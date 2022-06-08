@@ -140,4 +140,4 @@ Enjoy!
 ## License
 
 Since this software uses Stockfish, it is also distributed under the
-*GNU General Public License version 3* (GPL v3).
+[*GNU General Public License version 3* (GPL v3)](https://github.com/miguel-ambrona/D3-Chess/blob/main/LICENSE).

@@ -24,9 +24,12 @@ jobs:
       run: sudo make install
     - name: Enable shared libraries
       run: sudo /sbin/ldconfig -v
-    - name: make
+    - name: Compile CHA
       working-directory: ./src
       run: make
-    - name: test
+    - name: Test CHA
       working-directory: ./src
       run: ./cha test
+    - name: Benchmarks
+      working-directory: ./src
+      run: make test && make run-test
