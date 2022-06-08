@@ -373,13 +373,15 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos, DYNAMIC::Search& se
 
   search.init();
   search.set(0,0);
+
+  StateInfo st;
+  UTIL::trivial_progress(pos, st, 100);
+
   bool unwinnable;
   Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
   bool onlyPawnsAndBishops = !KRQ;
   bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
 
-  StateInfo st;
-  UTIL::trivial_progress(pos, st, 100);
   unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
 
   bool blockedCandidate =
