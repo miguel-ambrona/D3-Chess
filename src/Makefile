@@ -27,10 +27,10 @@ run-test:
 	curl -C - -o /tmp/lichess-65536.txt https://chasolver.org/lichess-65536.txt
 	cat /tmp/lichess-65536.txt | ./test >> /tmp/test.output
 	tail -n 11 /tmp/test.output
-	diff test.output /tmp/test.output
+	diff ../tests/test.output /tmp/test.output
 
 promote-output:
-	cp /tmp/test.output test.output
+	cp /tmp/test.output ../tests/test.output
 
 cha-lib:
 	g++ -shared -o libcha.so util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish -fPIC
