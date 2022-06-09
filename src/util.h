@@ -23,6 +23,7 @@ namespace UTIL {
 
   void unmove(Square *presquares, PieceType p, Color c, Square s);
   Bitboard neighbours(Square s);
+  Bitboard neighbours_distance_2(Square s);
   Square find_king(Position& pos, Color c);
   int nb_blocked_pawns(Position& pos);
   bool has_lonely_pawns(Position& pos);

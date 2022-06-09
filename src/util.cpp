@@ -65,6 +65,18 @@ Bitboard UTIL::neighbours(Square s) {
   return sNeighbours;
 }
 
+// squares at exactly king-distance 2 of s
+
+Bitboard UTIL::neighbours_distance_2(Square s) {
+
+  Bitboard sNeighbours = 0;
+  for (Square t = SQ_A1; t <= SQ_H8; ++t)
+    if (distance<Square>(s, t) == 2)
+      sNeighbours |= square_bb(t);
+
+  return sNeighbours;
+}
+
 Square UTIL::find_king(Position& pos, Color c) {
 
   Square s;
