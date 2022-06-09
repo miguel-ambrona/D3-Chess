@@ -101,7 +101,7 @@ void loop(int argc, char *argv[]) {
   Position pos;
   std::string token, line;
   StateListPtr states(new std::deque<StateInfo>(1));
-  uint64_t globalLimit = 1000000;
+  uint64_t globalLimit = 10000000;
 
   static DYNAMIC::Search search = DYNAMIC::Search();
   search.set_limit(globalLimit);
