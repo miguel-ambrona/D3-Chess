@@ -312,7 +312,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     Bitboard escapingSquares = 0;
     Bitboard checkingSquares = 0;
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
-      if (distance<Square>(s,t) == 1 && loserKingRegion & t) {
+      if (distance<Square>(s,t) == 1 && (loserKingRegion & t)) {
         if (~visitorsSquareColor & t)
             escapingSquares |= t;
         else
