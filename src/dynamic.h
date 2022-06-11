@@ -47,6 +47,7 @@ namespace DYNAMIC {
     Depth max_depth() const;
 
     void annotate_move(Move m);
+    void increase_cnt();
     void step();
     void undo_step();
     void set_winnable();
@@ -124,8 +125,11 @@ namespace DYNAMIC {
       checkmateSequence[depth] = m;
   }
 
-  inline void Search::step() {
+  inline void Search::increase_cnt() {
     counter++;
+  }
+
+  inline void Search::step() {
     depth++;
   }
 

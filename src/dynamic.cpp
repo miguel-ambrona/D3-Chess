@@ -267,6 +267,7 @@ namespace {
       // Continue the search from the new position
       search.annotate_move(m);
       search.step();
+      search.increase_cnt();
 
       int checkMate =
         find_mate<MODE,TARGET>(pos, search, newDepth,
@@ -345,7 +346,9 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
     // Apply iterative deepening (find_mate may look deeper than maxDepth on
     // rewarded variations)
     for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
-      search.set(maxDepth, 10000); // Local limit of 10000 is empirically good
+      // This choice seems empirically good
+      uint64_t limit = 10000;
+      search.set(maxDepth, limit);
       mate = find_mate<DYNAMIC::FULL,DYNAMIC::ANY>(pos, search, 0, false, false);
 
       if (!search.is_interrupted() && !mate)
