@@ -133,7 +133,7 @@ void SemiStatic::System::saturate(Position& pos) {
           Bitboard attackers = pos.attackers_to(target) & pos.pieces(~c);
 
           for (int sq = 0; sq < 64; ++sq)
-            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,(Square)sq)]) {
+            if ((attackers & (1ULL << sq)) && !variables[clear_index(~c,static_cast<Square>(sq))]) {
               target_attacked = true;
               break;
             }
@@ -216,7 +216,7 @@ void SemiStatic::System::saturate(Position& pos) {
       if (p == PAWN) {
         Square prom_rank = (c == WHITE) ? SQ_A8 : SQ_A1;
         for (int file = 0; file < 8; ++file)
-          if (variables[index(p,c,source,(Square)(prom_rank+file))]) {
+          if (variables[index(p,c,source,static_cast<Square>(prom_rank+file))]) {
             for (int j = 0; j < 64; ++j) {
               int i = index(p,c,source,SQ_A1) + j;
               change = variables[i] ? change : true;

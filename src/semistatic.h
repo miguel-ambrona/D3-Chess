@@ -70,7 +70,7 @@ namespace SemiStatic {
 
   inline int System::index(PieceType p, Color c, Square source,
                            Square target) const {
-    return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | (int)target);
+    return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | static_cast<int>(target));
   }
 
   inline int color_square_index(Color c, Square s) {
