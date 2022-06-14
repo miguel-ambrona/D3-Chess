@@ -41,7 +41,7 @@ void UTIL::unmove(Square *presquares, PieceType p, Color c, Square s) {
   int direction = (c == WHITE) ? 1 : -1;
 
   for (int j = 0; j < 8; ++j) {
-    Square prev = (Square) (s + direction * INCREMENTS[p-1][j]);
+    Square prev = static_cast<Square> (s + direction * INCREMENTS[p-1][j]);
     if (overflow(s, prev))
       continue;
 
@@ -49,7 +49,7 @@ void UTIL::unmove(Square *presquares, PieceType p, Color c, Square s) {
     i++;
   }
   while (i < 8)
-    presquares[i++] = (Square) -1;
+    presquares[i++] = static_cast<Square> (-1);
 }
 
 Bitboard UTIL::neighbours(Square s) {
