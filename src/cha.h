@@ -15,16 +15,15 @@
   details.
 */
 
-
 #ifndef CHA_H_INCLUDED
 #define CHA_H_INCLUDED
 
 namespace CHA {
 
-  void init();
+void init();
 
-  bool is_dead(Position&);
+bool is_dead(Position&);
 
-} // namespace CHA
+}  // namespace CHA
 
-#endif // #ifndef CHA_H_INCLUDED
+#endif  // #ifndef CHA_H_INCLUDED

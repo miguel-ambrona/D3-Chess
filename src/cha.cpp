@@ -36,8 +36,7 @@ bool CHA::is_dead(Position& pos) {
   search.set_winner(WHITE);
   DYNAMIC::SearchResult result = DYNAMIC::quick_analysis(pos, search);
 
-  if (result != DYNAMIC::UNWINNABLE)
-    return false;
+  if (result != DYNAMIC::UNWINNABLE) return false;
 
   search.set_winner(BLACK);
   return DYNAMIC::UNWINNABLE == DYNAMIC::quick_analysis(pos, search);
@@ -48,7 +47,6 @@ bool CHA::is_dead(Position& pos) {
 // winner is the last player who moved)
 
 Color parse_line(Position& pos, StateInfo* si, std::string& line) {
-
   std::string fen, token;
   std::istringstream iss(line);
 
@@ -70,7 +68,6 @@ Color parse_line(Position& pos, StateInfo* si, std::string& line) {
 // loop() waits for a command from stdin or tests file and analyzes it.
 
 void loop(int argc, char* argv[]) {
-
   CHA::init();
 
   Position pos;
@@ -89,20 +86,16 @@ void loop(int argc, char* argv[]) {
       quickAnalysis = true;
     }
 
-    if (std::string(argv[i]) == "-u")
-      skipWinnable = true;
+    if (std::string(argv[i]) == "-u") skipWinnable = true;
 
-    if (std::string(argv[i]) == "-min")
-      findShortest = true;
+    if (std::string(argv[i]) == "-min") findShortest = true;
 
-    if (std::string(argv[i]) == "-quick")
-      quickAnalysis = true;
+    if (std::string(argv[i]) == "-quick") quickAnalysis = true;
 
-    if (std::string(argv[i]) == "-timeout")
-      adjudicateTimeout = true;
+    if (std::string(argv[i]) == "-timeout") adjudicateTimeout = true;
 
     if (std::string(argv[i]) == "-limit") {
-      std::istringstream iss(argv[i+1]);
+      std::istringstream iss(argv[i + 1]);
       iss >> globalLimit;
     }
   }
@@ -117,9 +110,7 @@ void loop(int argc, char* argv[]) {
   uint64_t maxTime = 0;
 
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
-
-    if (line == "quit")
-      break;
+    if (line == "quit") break;
 
     DYNAMIC::SearchResult result;
     Color winner = parse_line(pos, &states->back(), line);
@@ -137,7 +128,8 @@ void loop(int argc, char* argv[]) {
       result = DYNAMIC::full_analysis(pos, search);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+    auto diff =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
     uint64_t duration = diff.count();
 
     if (adjudicateTimeout) {
@@ -149,8 +141,7 @@ void loop(int argc, char* argv[]) {
 
       else
         std::cout << "0-1" << std::endl;
-    }
-    else {
+    } else {
       // On quick mode, we only print [unwinnable] ([undetermined] are all
       // guessed to be [winnable]).
       // On full mode, we print all cases except possibly [winnable].
@@ -160,27 +151,24 @@ void loop(int argc, char* argv[]) {
         std::cout << " time " << duration << " (" << line << ")" << std::endl;
       }
 
-      //if (duration > 100 * 1000 * 1000)
-      //std::cout << "Hard: " << line << std::endl;
-
+      // if (duration > 100 * 1000 * 1000)
+      // std::cout << "Hard: " << line << std::endl;
     }
 
     totalPuzzles++;
     totalTime += duration;
-    if (duration > maxTime)
-      maxTime = duration;
+    if (duration > maxTime) maxTime = duration;
   }
 
   std::cout << "Analyzed " << totalPuzzles << " "
-            << "positions in " << totalTime/1000/1000 << " ms "
-            << "(avg: " << totalTime/totalPuzzles/1000 << " us; "
-            << "max: " << maxTime/1000 << " us)" << std::endl;
+            << "positions in " << totalTime / 1000 / 1000 << " ms "
+            << "(avg: " << totalTime / totalPuzzles / 1000 << " us; "
+            << "max: " << maxTime / 1000 << " us)" << std::endl;
 
   Threads.stop = true;
 }
 
 int main(int argc, char* argv[]) {
-
   init_stockfish();
   std::cout << "Chess Unwinnability Analyzer (CHA) version 2.5" << std::endl;
 

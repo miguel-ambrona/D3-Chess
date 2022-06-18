@@ -38,68 +38,67 @@
 
 namespace SemiStatic {
 
-  constexpr int N_MOVE_VARS = 49152;   // 2 * 6 * 64 * 64
-                                       // (color * piece_type * from_sq * to_sq)
-  constexpr int N_PROM_VARS    = 128;  // 2 * 64 (color * from_sq)
-  constexpr int N_CLEAR_VARS   = 128;  // 2 * 64 (color * square)
-  constexpr int N_REACH_VARS   = 128;  // 2 * 64 (color * square)
-  constexpr int N_CAPTURE_VARS = 128;  // 2 * 64 (color * square)
+constexpr int N_MOVE_VARS = 49152;   // 2 * 6 * 64 * 64
+                                     // (color * piece_type * from_sq * to_sq)
+constexpr int N_PROM_VARS = 128;     // 2 * 64 (color * from_sq)
+constexpr int N_CLEAR_VARS = 128;    // 2 * 64 (color * square)
+constexpr int N_REACH_VARS = 128;    // 2 * 64 (color * square)
+constexpr int N_CAPTURE_VARS = 128;  // 2 * 64 (color * square)
 
-  // Equations for clear and reach variables are handeled independently:
+// Equations for clear and reach variables are handeled independently:
 
-  constexpr int N_EQS = 49280;  // N_MOVE_VARS + N_PROM_VARS
-  constexpr int N_VARS = 49664; // N_MOVE_VARS + 128 * 4
+constexpr int N_EQS = 49280;   // N_MOVE_VARS + N_PROM_VARS
+constexpr int N_VARS = 49664;  // N_MOVE_VARS + 128 * 4
 
-  class System {
-  public:
-    System() = default;
-
-    void init();
-
-    int index(PieceType p, Color c, Square source, Square target) const;
-    void saturate(Position& pos);
-    Bitboard king_region(Position& pos, Color c);
-    Bitboard visitors(Position& pos, Bitboard region, Color c);
-    bool is_unwinnable(Position& pos, Color intendedWinner);
-
-  private:
-    // Data members
-    int equations[N_EQS][8]; // Each equation has at most 8 disjuncts.
-    bool variables[N_VARS];
-  };
-
-  inline int System::index(PieceType p, Color c, Square source,
-                           Square target) const {
-    return (p - 1) * (1 << 13) + ((c << 12) | (source << 6) | static_cast<int>(target));
-  }
-
-  inline int color_square_index(Color c, Square s) {
-    return (c << 6) | int(s);
-  }
-
-  inline int prom_index(Color c, Square s) {
-    return N_MOVE_VARS + color_square_index(c,s);
-  }
-
-  inline int clear_index(Color c, Square s) {
-    return N_MOVE_VARS + N_PROM_VARS + color_square_index(c,s);
-  }
-
-  inline int reach_index(Color c, Square s) {
-    return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + color_square_index(c,s);
-  }
-
-  inline int capture_index(Color c, Square s) {
-    return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + N_REACH_VARS +
-      color_square_index(c,s);
-  }
+class System {
+ public:
+  System() = default;
 
   void init();
 
+  int index(PieceType p, Color c, Square source, Square target) const;
+  void saturate(Position& pos);
+  Bitboard king_region(Position& pos, Color c);
+  Bitboard visitors(Position& pos, Bitboard region, Color c);
   bool is_unwinnable(Position& pos, Color intendedWinner);
-  bool is_unwinnable_after_one_move(Position& pos, Color intendedWinner);
 
-} // namespace SemiStatic
+ private:
+  // Data members
+  int equations[N_EQS][8];  // Each equation has at most 8 disjuncts.
+  bool variables[N_VARS];
+};
+
+inline int System::index(PieceType p, Color c, Square source,
+                         Square target) const {
+  return (p - 1) * (1 << 13) +
+         ((c << 12) | (source << 6) | static_cast<int>(target));
+}
+
+inline int color_square_index(Color c, Square s) { return (c << 6) | int(s); }
+
+inline int prom_index(Color c, Square s) {
+  return N_MOVE_VARS + color_square_index(c, s);
+}
+
+inline int clear_index(Color c, Square s) {
+  return N_MOVE_VARS + N_PROM_VARS + color_square_index(c, s);
+}
+
+inline int reach_index(Color c, Square s) {
+  return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + color_square_index(c, s);
+}
+
+inline int capture_index(Color c, Square s) {
+  return N_MOVE_VARS + N_PROM_VARS + N_CLEAR_VARS + N_REACH_VARS +
+         color_square_index(c, s);
+}
+
+void init();
+
+bool is_unwinnable(Position& pos, Color intendedWinner);
+bool is_unwinnable_after_one_move(Position& pos, Color intendedWinner);
+
+}  // namespace SemiStatic
 
 // The main idea behind this analysis is to build and solve a system of
 // equations over Boolean variables of the form X(s->t) for a given source
