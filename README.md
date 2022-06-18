@@ -130,7 +130,7 @@ in the search.
 Other examples:
 
 > **./cha -min -limit 1000000**<br>
-> Chess Unwinnability Analyzer (CHA) version 2.5<br>
+> Chess Unwinnability Analyzer (CHA) version 2.5.1<br>
 > **8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white**<br>
 > winnable f4b8 e7f7 d4h8 e6e7 b8f8 e7f8n# nodes 473539 time 127488460 (8/4K2k/4P2p/8/3b1q2/8/8/8 b - - white)
 
