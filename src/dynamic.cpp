@@ -392,7 +392,10 @@ DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos,
     search.set_unwinnable();
 
   TT.clear();
-  for (int depth = 1; depth <= 1000; depth++) {
+
+  int initial_depth = pos.side_to_move() == search.intended_winner() ? 1 : 0;
+
+  for (int depth = initial_depth; depth <= 1000; depth += 2) {
     search.set(depth, search.get_limit());
     mate = find_mate<DYNAMIC::FULL, DYNAMIC::SHORTEST>(pos, search, 0, false,
                                                        false);
