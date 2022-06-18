@@ -1,5 +1,4 @@
 ---------------- Test vectors ----------------
-Chess Unwinnability Analyzer (CHA) version 2.5
 undetermined nodes 10468552 (-- 1k6/b1b5/7p/5p1P/5p2/5PpK/6P1/8 w - - white)
 undetermined nodes 10675564 (-- 1k6/b1b5/7p/5p1P/5p2/5PpK/6P1/8 w - - black)
 undetermined nodes 10642817 (-- 8/8/k6p/5p1P/3b1p2/2b2PpK/6P1/8 w - - white)
@@ -41,7 +40,6 @@ nodes (avg): 139286
 nodes (max): 10785258
 
 ---------------- Test Lichess ----------------
-Chess Unwinnability Analyzer (CHA) version 2.5
 
 POSITIONS COUNT:
      solved: 131072/131072
