@@ -15,34 +15,32 @@
   details.
 */
 
-
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
 namespace UTIL {
 
-  void unmove(Square *presquares, PieceType p, Color c, Square s);
-  Bitboard neighbours(Square s);
-  Bitboard neighbours_distance_2(Square s);
-  Square find_king(Position& pos, Color c);
-  int nb_blocked_pawns(Position& pos);
-  bool has_lonely_pawns(Position& pos);
-  bool semi_blocked_target(Position& pos, Square &target);
+void unmove(Square* presquares, PieceType p, Color c, Square s);
+Bitboard neighbours(Square s);
+Bitboard neighbours_distance_2(Square s);
+Square find_king(Position& pos, Color c);
+int nb_blocked_pawns(Position& pos);
+bool has_lonely_pawns(Position& pos);
+bool semi_blocked_target(Position& pos, Square& target);
 
-  bool is_corner(Square s);
+bool is_corner(Square s);
 
-  void trivial_progress(Position& pos, StateInfo& st, int repetitions);
+void trivial_progress(Position& pos, StateInfo& st, int repetitions);
 
-} // namespace UTIL
-
+}  // namespace UTIL
 
 namespace KnightDistance {
 
-  int knight_distance(Square x, Square y);
+int knight_distance(Square x, Square y);
 
-  void init();
-  int get(Square x, Square y);
+void init();
+int get(Square x, Square y);
 
-} // namespace KnightDistance
+}  // namespace KnightDistance
 
-#endif // #ifndef UTIL_H_INCLUDED
+#endif  // #ifndef UTIL_H_INCLUDED

@@ -18,48 +18,44 @@
 #include "stockfish.h"
 #include "util.h"
 
+
 constexpr int NONE = 128;  // High enough to go outside of the board
 
-int PAWN_INCS[8]   = { -8, -7, -9, NONE, NONE, NONE, NONE, NONE };
-int KNIGHT_INCS[8] = { 17, 15, 10, 6, -6, -10, -15, -17 };
-int BISHOP_INCS[8] = { 9, 7, -7, -9, NONE, NONE, NONE, NONE };
-int ROOK_INCS[8]   = { 8, 1, -1, -8, NONE, NONE, NONE, NONE };
-int QUEEN_INCS[8]  = { 9, 8, 7, 1, -1, -7, -8, -9 };
-int KING_INCS[8]   = { 9, 8, 7, 1, -1, -7, -8, -9 };
+int PAWN_INCS[8] = {-8, -7, -9, NONE, NONE, NONE, NONE, NONE};
+int KNIGHT_INCS[8] = {17, 15, 10, 6, -6, -10, -15, -17};
+int BISHOP_INCS[8] = {9, 7, -7, -9, NONE, NONE, NONE, NONE};
+int ROOK_INCS[8] = {8, 1, -1, -8, NONE, NONE, NONE, NONE};
+int QUEEN_INCS[8] = {9, 8, 7, 1, -1, -7, -8, -9};
+int KING_INCS[8] = {9, 8, 7, 1, -1, -7, -8, -9};
 
-int *INCREMENTS[6] = { PAWN_INCS, KNIGHT_INCS, BISHOP_INCS,
-                       ROOK_INCS, QUEEN_INCS, KING_INCS };
+int* INCREMENTS[6] = {PAWN_INCS, KNIGHT_INCS, BISHOP_INCS,
+                      ROOK_INCS, QUEEN_INCS,  KING_INCS};
 
 bool overflow(Square source, Square target) {
-  return abs((source % 8) - (target % 8)) > 2 ||
-         target < SQ_A1 || target > SQ_H8;
+  return abs((source % 8) - (target % 8)) > 2 || target < SQ_A1 ||
+         target > SQ_H8;
 }
 
-void UTIL::unmove(Square *presquares, PieceType p, Color c, Square s) {
-
+void UTIL::unmove(Square* presquares, PieceType p, Color c, Square s) {
   int i = 0;
   int direction = (c == WHITE) ? 1 : -1;
 
   for (int j = 0; j < 8; ++j) {
-    Square prev = static_cast<Square> (s + direction * INCREMENTS[p-1][j]);
-    if (overflow(s, prev))
-      continue;
+    Square prev = static_cast<Square>(s + direction * INCREMENTS[p - 1][j]);
+    if (overflow(s, prev)) continue;
 
     presquares[i] = prev;
     i++;
   }
-  while (i < 8)
-    presquares[i++] = static_cast<Square> (-1);
+  while (i < 8) presquares[i++] = static_cast<Square>(-1);
 }
 
 Bitboard UTIL::neighbours(Square s) {
-
   Bitboard sNeighbours = 0;
   Square presquares[8];
   unmove(presquares, KING, WHITE, s);  // Color does not matter
   for (int j = 0; j < 8; ++j) {
-    if (presquares[j] < 0)
-      break;
+    if (presquares[j] < 0) break;
     sNeighbours |= presquares[j];
   }
   return sNeighbours;
@@ -68,29 +64,24 @@ Bitboard UTIL::neighbours(Square s) {
 // squares at exactly king-distance 2 of s
 
 Bitboard UTIL::neighbours_distance_2(Square s) {
-
   Bitboard sNeighbours = 0;
   for (Square t = SQ_A1; t <= SQ_H8; ++t)
-    if (distance<Square>(s, t) == 2)
-      sNeighbours |= square_bb(t);
+    if (distance<Square>(s, t) == 2) sNeighbours |= square_bb(t);
 
   return sNeighbours;
 }
 
 Square UTIL::find_king(Position& pos, Color c) {
-
   Square s;
   Bitboard king = pos.pieces(c, KING);
   for (s = SQ_A1; s <= SQ_H8; ++s)
-    if (king & s)
-      break;
+    if (king & s) break;
   return s;
 }
 
 // Returns the number of white pawns that are blocked by a black pawn
 
 int UTIL::nb_blocked_pawns(Position& pos) {
-
   Bitboard whitePawns = pos.pieces(WHITE, PAWN);
   Bitboard blackPawns = pos.pieces(BLACK, PAWN);
 
@@ -100,7 +91,6 @@ int UTIL::nb_blocked_pawns(Position& pos) {
 // A pawn is said to be "lonely" if there are no opponent pawns in its file
 
 bool UTIL::has_lonely_pawns(Position& pos) {
-
   Bitboard whitePawns = pos.pieces(WHITE, PAWN);
   Bitboard blackPawns = pos.pieces(BLACK, PAWN);
 
@@ -108,11 +98,9 @@ bool UTIL::has_lonely_pawns(Position& pos) {
   int blackPawnOcc = 0;
 
   for (Square s = SQ_A1; s <= SQ_H8; ++s) {
-    if ((whitePawns & s) && s < SQ_A7)
-      whitePawnOcc |= (1 << s % 8);
+    if ((whitePawns & s) && s < SQ_A7) whitePawnOcc |= (1 << s % 8);
 
-    if ((blackPawns & s) && s > SQ_H2)
-      blackPawnOcc |= (1 << s % 8);
+    if ((blackPawns & s) && s > SQ_H2) blackPawnOcc |= (1 << s % 8);
   }
 
   return whitePawnOcc != blackPawnOcc;
@@ -122,8 +110,7 @@ bool UTIL::has_lonely_pawns(Position& pos) {
 // Returns true if found and set target to the square in between.
 // Returns false if not found.
 
-bool UTIL::semi_blocked_target(Position &pos, Square &target) {
-
+bool UTIL::semi_blocked_target(Position& pos, Square& target) {
   Bitboard whitePawns = pos.pieces(WHITE, PAWN);
   Bitboard blackPawns = pos.pieces(BLACK, PAWN);
 
@@ -142,7 +129,6 @@ bool UTIL::is_corner(Square s) {
   return (s == SQ_A1 || s == SQ_H1 || s == SQ_A8 || s == SQ_H8);
 }
 
-
 // Trivial progress: as long as there is only one legal move, make that move
 // (But at most a limited number of times, to avoid infinite loops)
 
@@ -153,7 +139,6 @@ void UTIL::trivial_progress(Position& pos, StateInfo& st, int repetitions) {
       trivial_progress(pos, st, repetitions - 1);
     }
 }
-
 
 // The next function computes the knight distance between two squares.
 // Note that this can be calculated from just the rank distance and
@@ -170,35 +155,35 @@ void UTIL::trivial_progress(Position& pos, StateInfo& st, int repetitions) {
 // tables, as well as the symmetric cases in other corners.
 
 int KnightDistance::knight_distance(Square x, Square y) {
-
   std::pair<int, int> idx =
-    std::minmax(distance<File>(x, y), distance<Rank>(x, y));
+      std::minmax(distance<File>(x, y), distance<Rank>(x, y));
 
   // Handle the exceptional cases
 
   if (idx.first == 1 && idx.second == 1 &&
-      (UTIL::is_corner(x) || UTIL::is_corner(y)))  return 4;
+      (UTIL::is_corner(x) || UTIL::is_corner(y)))
+    return 4;
 
   // First and second tables
   if (idx.first % 2 == idx.second % 2) {
-    if (idx.first == 0 && idx.second == 0)  return 0;
-    if (idx.first == 0 && idx.second == 2)  return 2;
-    if (idx.first == 0 && idx.second == 4)  return 2;
-    if (idx.first == 2 && idx.second == 4)  return 2;
+    if (idx.first == 0 && idx.second == 0) return 0;
+    if (idx.first == 0 && idx.second == 2) return 2;
+    if (idx.first == 0 && idx.second == 4) return 2;
+    if (idx.first == 2 && idx.second == 4) return 2;
 
-    if (idx.first == 1 && idx.second == 1)  return 2;
-    if (idx.first == 1 && idx.second == 3)  return 2;
-    if (idx.first == 3 && idx.second == 3)  return 2;
-    if (idx.first == 7 && idx.second == 7)  return 6;
+    if (idx.first == 1 && idx.second == 1) return 2;
+    if (idx.first == 1 && idx.second == 3) return 2;
+    if (idx.first == 3 && idx.second == 3) return 2;
+    if (idx.first == 7 && idx.second == 7) return 6;
 
     return 4;
   }
 
   // Third table
   else {
-    if (idx.second == 7)                    return 5;
-    if (idx.first == 1 && idx.second == 2)  return 1;
-    if (idx.first == 5 && idx.second == 6)  return 5;
+    if (idx.second == 7) return 5;
+    if (idx.first == 1 && idx.second == 2) return 1;
+    if (idx.first == 5 && idx.second == 6) return 5;
 
     return 3;
   }
@@ -209,14 +194,12 @@ int KnightDistance::knight_distance(Square x, Square y) {
 
 static int KnightDistanceTable[4096];  // 64 * 64 = 4096
 
-inline unsigned index(Square x, Square y) {
-  return int(x) | (y << 6);
-}
+inline unsigned index(Square x, Square y) { return int(x) | (y << 6); }
 
 void KnightDistance::init() {
   for (Square x = SQ_A1; x <= SQ_H8; ++x) {
     for (Square y = SQ_A1; y <= SQ_H8; ++y)
-      KnightDistanceTable[index(x,y)] = knight_distance(x,y);
+      KnightDistanceTable[index(x, y)] = knight_distance(x, y);
   }
 }
 

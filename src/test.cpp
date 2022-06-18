@@ -29,14 +29,12 @@
 //   * -- : no player can potentially helpmate, dead draw
 
 std::string parse_line(Position &pos, StateInfo *si, std::string &line) {
-
   std::string fen, token, expected;
   std::istringstream iss(line);
 
   iss >> expected;
 
-  while (iss >> token)
-    fen += token + " ";
+  while (iss >> token) fen += token + " ";
 
   pos.set(fen, false, si, Threads.main());
 
@@ -48,7 +46,6 @@ void analyze(std::string &line, Color winner, Position &pos,
              uint64_t &totalNodes, uint64_t &maxNodes, uint64_t &totalPositions,
              uint64_t &totalSolved, uint64_t &totalPreStatic,
              uint64_t &totalStatic) {
-
   DYNAMIC::SearchResult result;
   std::string expected = parse_line(pos, &states->back(), line);
 
@@ -80,21 +77,17 @@ void analyze(std::string &line, Color winner, Position &pos,
 
   uint64_t nodes = search.get_nb_nodes();
   totalNodes += nodes;
-  if (search.get_flag() == DYNAMIC::PRE_STATIC)
-    totalPreStatic++;
+  if (search.get_flag() == DYNAMIC::PRE_STATIC) totalPreStatic++;
 
-  if (search.get_flag() == DYNAMIC::STATIC)
-    totalStatic++;
+  if (search.get_flag() == DYNAMIC::STATIC) totalStatic++;
 
-  if (nodes > maxNodes)
-    maxNodes = nodes;
+  if (nodes > maxNodes) maxNodes = nodes;
   totalSolved++;
 }
 
 // loop() waits for a test line from stdin and analyzes it.
 
 void loop(int argc, char *argv[]) {
-
   KnightDistance::init();
   SemiStatic::init();
 
@@ -114,9 +107,7 @@ void loop(int argc, char *argv[]) {
   uint64_t maxNodes = 0;
 
   while (getline(std::cin, line)) {
-
-    if (line[0] == '#')
-      continue;
+    if (line[0] == '#') continue;
 
     DYNAMIC::SearchResult result;
     std::string expected = parse_line(pos, &states->back(), line);
@@ -147,7 +138,6 @@ void loop(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-
   init_stockfish();
   std::cout << "Chess Unwinnability Analyzer (CHA) version 2.5" << std::endl;
 
