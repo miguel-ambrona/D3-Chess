@@ -300,8 +300,8 @@ bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
 
 }  // namespace
 
-DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
-                                             DYNAMIC::Search& search) {
+DYNAMIC::SearchResult full_analysis_aux(Position& pos,
+                                        DYNAMIC::Search& search) {
   bool mate;
   search.init();
 
@@ -340,14 +340,44 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
     }
   }
 
-  // Careful, the following function modifies the position, we want it for
-  // extreme completeness:
-  // FIXME:
-  // Improve it to arbitrary depth (not just one).
-  // Are there examples where more than depth 1 will be needed?
-  if (search.get_result() == DYNAMIC::UNDETERMINED)
-    if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
+  return search.get_result();
+}
+
+DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
+                                             DYNAMIC::Search& search) {
+  DYNAMIC::SearchResult res = full_analysis_aux(pos, search);
+  if (res == DYNAMIC::UNDETERMINED) {
+    bool unwinnable = true;
+    StateInfo st;
+    TT.clear();
+    search.set(10, 10000);
+    for (const auto& m : MoveList<LEGAL>(pos)) {
+      pos.do_move(m, st);
+      search.annotate_move(m);
+      search.step();
+      search.increase_cnt();
+
+      if (!SemiStatic::is_unwinnable(pos, search.intended_winner())) {
+        unwinnable = false;
+        break;
+      }
+
+      search.undo_step();
+      pos.undo_move(m);
+    }
+
+    if (unwinnable) {
       search.set_unwinnable();
+
+    } else {
+      // Explore one of those positions that is not statically unwinnable after
+      // one move
+      bool mate =
+          find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
+      if (!search.is_interrupted() && !mate) search.set_unwinnable();
+    }
+    return search.get_result();
+  }
 
   return search.get_result();
 }
