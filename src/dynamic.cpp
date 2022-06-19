@@ -287,6 +287,7 @@ bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
     StateInfo st;
     pos.do_move(m, st);
     search.step();
+    search.increase_cnt();
     bool unwinnable = dynamically_unwinnable(pos, depth - 1, winner, search);
     pos.undo_move(m);
 
