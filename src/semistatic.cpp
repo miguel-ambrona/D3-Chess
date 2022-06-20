@@ -46,6 +46,13 @@ void SemiStatic::System::saturate(Position& pos) {
 
   for (int j = 0; j < 4 * 128; ++j) variables[N_MOVE_VARS + j] = false;
 
+  // The following four variables are part of our logic for capturing
+  // stalemate motifs
+  int whiteMovements = 0;
+  int blackMovements = 0;
+  Square whiteExtraKingSquare = UTIL::find_king(pos, WHITE);
+  Square blackExtraKingSquare = UTIL::find_king(pos, BLACK);
+
   Square occupied[64];
   int n = 0;
 
@@ -69,8 +76,11 @@ void SemiStatic::System::saturate(Position& pos) {
   // Saturate the system
 
   bool change = true;
+  int round = 0;
+
   while (change) {
     change = false;
+    round++;
 
     for (int k = 0; k < n; ++k) {
       Square source = occupied[k];
@@ -184,6 +194,38 @@ void SemiStatic::System::saturate(Position& pos) {
 
               if (j > 0) variables[capture_index(c, target)] = true;
             }
+
+            // --------- Logic to capture stalemate motifs ---------
+            if (c == WHITE) {
+              whiteMovements++;
+              if (p == KING) whiteExtraKingSquare = target;
+            } else {
+              blackMovements++;
+              if (p == KING) blackExtraKingSquare = target;
+            }
+
+            if (c == WHITE) {
+              if (p == KING && blackMovements <= 1) {
+                Square opp_king = UTIL::find_king(pos, ~c);
+                if (distance<Square>(target, opp_king) <= 1 ||
+                    distance<Square>(target, blackExtraKingSquare) <= 1)
+                  break;
+              }
+            } else {
+              if (p == KING && whiteMovements <= 1) {
+                Square opp_king = UTIL::find_king(pos, ~c);
+                if (distance<Square>(target, opp_king) <= 1 ||
+                    distance<Square>(target, whiteExtraKingSquare) <= 1)
+                  break;
+              }
+            }
+            // Do not allow captures in the first pass (this is to correctly
+            // load variables relative to [ExtraKingSquare]
+            if (round <= 1 && type_of(pos.piece_on(target)) != NO_PIECE_TYPE) {
+              change = true;
+              break;
+            }
+            // ------- End logic to capture stalemate motifs -------
 
             change = true;
             variables[i] = true;

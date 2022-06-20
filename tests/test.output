@@ -1,39 +1,21 @@
 ---------------- Test vectors ----------------
-undetermined nodes 10565016 (-- 1k6/b1b5/7p/5p1P/5p2/5PpK/6P1/8 w - - white)
-undetermined nodes 10775619 (-- 1k6/b1b5/7p/5p1P/5p2/5PpK/6P1/8 w - - black)
-undetermined nodes 10742851 (-- 8/8/k6p/5p1P/3b1p2/2b2PpK/6P1/8 w - - white)
-undetermined nodes 10766440 (-- 8/8/k6p/5p1P/3b1p2/2b2PpK/6P1/8 w - - black)
-undetermined nodes 10667700 (-- 8/b1b5/k6p/5p1P/5p2/5PpK/6P1/8 w - - white)
-undetermined nodes 10728726 (-- 8/b1b5/k6p/5p1P/5p2/5PpK/6P1/8 w - - black)
-undetermined nodes 10785507 (-- 8/b1b5/k6p/2b2p1P/1b3p2/5PpK/6P1/8 w - - white)
-undetermined nodes 10817962 (-- 8/b1b5/k6p/2b2p1P/1b3p2/5PpK/6P1/8 w - - black)
-undetermined nodes 10814562 (-- 8/8/7p/5p1P/3b1p1K/5Pp1/6P1/5kb1 b - - white)
-undetermined nodes 10799935 (-- 8/8/7p/5p1P/3b1p1K/5Pp1/6P1/5kb1 b - - black)
-undetermined nodes 10849963 (-- 8/8/3b3p/5p1P/3b1p1K/5Pp1/6P1/5kb1 b - - white)
-undetermined nodes 10849705 (-- 8/8/3b3p/5p1P/3b1p1K/5Pp1/6P1/5kb1 b - - black)
 undetermined nodes 10934620 (W- k6B/1b4B1/2b2B2/4B3/3B4/1pB1B3/pP1B4/K7 w - - white)
-undetermined nodes 10725109 (-- 8/1p6/1Pp5/k1P5/p1P5/P1K1B3/3B4/8 w - - white)
-undetermined nodes 10749291 (-- 8/1p6/1Pp5/k1P5/p1P5/P1K1B3/3B4/8 w - - black)
 undetermined nodes 10914702 (W- 7k/8/8/3B4/8/6p1/1b4Pp/2b4K w - - white)
 undetermined nodes 10879847 (WB 8/p1p1p3/8/4k3/8/6p1/P1P1P1Pp/7K w - - white)
 undetermined nodes 10920912 (WB N1b1N1N1/1pPpPpPp/1P1P1P1P/8/8/8/8/kb2B1K1 w - - white)
-undetermined nodes 10903239 (-- k1b5/1p1p4/1P1P4/B7/8/2B5/8/K7 w - - white)
-undetermined nodes 10904122 (-- k1b5/1p1p4/1P1P4/B7/8/2B5/8/K7 w - - black)
 undetermined nodes 10949400 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - white)
 undetermined nodes 10919080 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - black)
-undetermined nodes 10806876 (-- 5b2/8/7p/5p1P/5p1K/5Pp1/6P1/5kb1 b - - white)
-undetermined nodes 10789798 (-- 5b2/8/7p/5p1P/5p1K/5Pp1/6P1/5kb1 b - - black)
 
 POSITIONS COUNT:
-     solved: 2648/2672
-   unsolved: 24
+     solved: 2666/2672
+   unsolved: 6
  pre-static: 770
-     static: 724
-post-static: 1154
+     static: 846
+post-static: 1050
 
 NODES COUNT:
-total nodes: 404708940
-nodes (avg): 151462
+total nodes: 364272209
+nodes (avg): 136329
 nodes (max): 10874880
 
 ---------------- Test Lichess ----------------
