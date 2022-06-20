@@ -271,7 +271,7 @@ bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
 }
 
 bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
-                            DYNAMIC::Search& search) {
+                            DYNAMIC::Search& search, int& movedKings) {
   // Insufficient material to win
   if (impossible_to_win(pos, winner)) return true;
 
@@ -285,10 +285,13 @@ bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
   // Iterate over all legal moves
   for (const ExtMove& m : MoveList<LEGAL>(pos)) {
     StateInfo st;
+    if (type_of(pos.moved_piece(m)) == KING)
+      movedKings |= pos.side_to_move() == WHITE ? 2 : 1;
     pos.do_move(m, st);
     search.step();
     search.increase_cnt();
-    bool unwinnable = dynamically_unwinnable(pos, depth - 1, winner, search);
+    bool unwinnable =
+        dynamically_unwinnable(pos, depth - 1, winner, search, movedKings);
     pos.undo_move(m);
 
     if (!unwinnable) return false;
@@ -394,8 +397,18 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos,
   Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
   bool onlyPawnsAndBishops = !KRQ;
   bool almostOnlyPawnsAndBishops = popcount(KRQ) <= 1;
+  int movedKings = 0;
 
-  unwinnable = dynamically_unwinnable(pos, 9, search.intended_winner(), search);
+  unwinnable = dynamically_unwinnable(pos, 7, search.intended_winner(), search,
+                                      movedKings);
+  // if the position only contains pawns and/or bishops, at least one of the
+  // kings did not make a move in the previous search and the number of legal
+  // moves is restricted, repeat a deeper search
+  // TODO: remove if this turns out to be too ad hoc for capturing bKHPqNEw
+  if (!unwinnable && onlyPawnsAndBishops && movedKings != 3 &&
+      MoveList<LEGAL>(pos).size() <= 8)
+    unwinnable = dynamically_unwinnable(pos, 15, search.intended_winner(),
+                                        search, movedKings);
 
   bool blockedCandidate =
       UTIL::nb_blocked_pawns(pos) >= 1 && !UTIL::has_lonely_pawns(pos);
