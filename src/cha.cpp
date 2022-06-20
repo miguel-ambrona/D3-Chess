@@ -177,7 +177,7 @@ void loop(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   init_stockfish();
-  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.5.1" << std::endl;
+  std::cout << "Chess Unwinnability Analyzer (CHA) version 2.5.2" << std::endl;
 
   CommandLine::init(argc, argv);
   loop(argc, argv);
