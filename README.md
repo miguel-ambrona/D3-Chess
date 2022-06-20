@@ -59,24 +59,22 @@ In order to minimize the computational impact of running CHA, we propose a less
 complete, but faster version of our algorithm. Our quick version may terminate
 without having found a helpmate sequence in complex positions, declaring them
 as "probably winnable".
-Consequently, the quick version may fail to find all unwinnable positions.
-In fact, out of the exact 90,546 games that were unfairly classified
-(identified with the full version of CHA), the quick version can identify 90,543
-of them.
+Despite not being complete, our quick algorithm (since CHA v2.5.2) can correctly
+identify all unfairly classified games from the Lichess Open Database.
 
 Below, we present a comparison of the performance of the two versions of CHA
-when analyzing all the timeouts from January 2022 (32,599,280 positions).
-All experiments were performed on a 3.50GHz Intel-Core i9-9900X CPU,
-running Ubuntu 20.04 LTS.
+when analyzing all the non-drawn timeouts from May 2022 (28,817,738 positions).
+The experiments were performed on a personal laptop
+1.80GHz Intel-Core i7-10510U CPU, running Ubuntu 20.04 LTS.
 
 |                                 |    Full CHA   |    Quick CHA   |
 |--------------------------------:|:-------------:|:--------------:|
-|   Average #positions per second |      2700     |    200,000+    |
-|       Average time per position |     370 μs    |     4.96 μs    |
-|              Standard deviation |    1270 μs    |     9.06 μs    |
-|       Maximum time per position |     141 ms    |     586 μs     |
-| Unwinnable positions identified |  2462 (100%)  |  2462 (100%)   |
-|            Total execution time |   3 h 21 min  |   2 min 42 s   |
+|   Average #positions per second |      3650     |    200,000+    |
+|       Average time per position |     273 μs    |     4.70 μs    |
+|              Standard deviation |     450 μs    |     8.47 μs    |
+|       Maximum time per position |     207 ms    |     2.25 ms    |
+| Unwinnable positions identified |  2159 (100%)  |  2159 (100%)   |
+|            Total execution time |   2 h 11 min  |   2 min 15 s   |
 
 
 ## Installation & Usage
