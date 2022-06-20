@@ -142,7 +142,7 @@ If you are building your own tool for solving chess unwinnability, you may
 want to see how it performs on our
 [test vectors](https://github.com/miguel-ambrona/D3-Chess/blob/main/tests/test-vector.txt),
 a list of challenging positions queried by the community to our web tool
-[https://chasolver.org](https://chasolver.org).
+[https://chasolver.org/analyzer](https://chasolver.org/analyzer.html).
 Each position comes with the corresponding classification with respect
 to unwinnability.
 
