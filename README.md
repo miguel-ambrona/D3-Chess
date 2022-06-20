@@ -14,8 +14,8 @@ for move generation and chess-related functions.)
 
 ## What is this tool useful for?
 
-This tool can be used to rigorously (and automatically) apply Article 6.9 of the
-[FIDE Laws of Chess](https://www.fide.com/FIDE/handbook/LawsOfChess.pdf):
+This tool can be used to rigorously (and automatically) applying Article 6.9 of
+the [FIDE Laws of Chess](https://www.fide.com/FIDE/handbook/LawsOfChess.pdf):
 
 > ...if a player does not complete the prescribed number of moves in the
 > allotted time, the game is lost by the player. However, the game is drawn
@@ -27,6 +27,10 @@ Which in shorter English would read as:
 
 This is a (relatively unknown) generalization of the folklore rule that says
 that when you just have the king, you cannot win anymore, not even on the clock.
+
+This tool can also be used to correctly applying Article 5.2.2 of the FIDE Laws,
+which establishes that a game is finished as soon as the position becomes dead,
+i.e. unwinnable for both players, and no more moves should be played.
 
 See [this page](https://chasolver.org)
 for more details about the problem of correctly applying Article 6.9 and to
