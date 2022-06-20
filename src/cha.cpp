@@ -22,6 +22,7 @@
 #include "cha.h"
 #include <sstream>
 #include <fstream>
+#include <math.h>
 
 
 void CHA::init() {
@@ -108,6 +109,7 @@ void loop(int argc, char* argv[]) {
   uint64_t totalPuzzles = 0;
   uint64_t totalTime = 0;
   uint64_t maxTime = 0;
+  uint64_t totalTimeSquared = 0;
 
   while (runningTests ? getline(infile, line) : getline(std::cin, line)) {
     if (line == "quit") break;
@@ -157,12 +159,17 @@ void loop(int argc, char* argv[]) {
 
     totalPuzzles++;
     totalTime += duration;
+    totalTimeSquared += duration * duration;
     if (duration > maxTime) maxTime = duration;
   }
 
+  uint64_t avg = totalTime / totalPuzzles;
+  uint64_t variance = (totalTimeSquared / totalPuzzles) - (avg * avg);
+
   std::cout << "Analyzed " << totalPuzzles << " "
             << "positions in " << totalTime / 1000 / 1000 << " ms "
-            << "(avg: " << totalTime / totalPuzzles / 1000 << " us; "
+            << "(avg: " << avg / 1000.0 << " us; "
+            << "std: " << sqrt(variance) / 1000 << " us; "
             << "max: " << maxTime / 1000 << " us)" << std::endl;
 
   Threads.stop = true;
