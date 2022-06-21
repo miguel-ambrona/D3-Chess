@@ -150,7 +150,7 @@ void loop(int argc, char* argv[]) {
       if ((!quickAnalysis || result == DYNAMIC::UNWINNABLE) &&
           (!skipWinnable || result != DYNAMIC::WINNABLE)) {
         search.print_result();
-        std::cout << " time " << duration << " (" << line << ")" << std::endl;
+        std::cout << " time " << duration / 1000 << " (" << line << ")" << std::endl;
       }
 
       // if (duration > 100 * 1000 * 1000)

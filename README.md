@@ -104,7 +104,7 @@ When "winnable", a helpmate sequence in UCI format is provided.
 
 1. **nodes** _int_, the total number of positions evaluated.
 
-1. **time** _int_, the total execution time (measured in nanoseconds).
+1. **time** _int_, the total execution time (measured in microseconds).
 
 For example:
 
