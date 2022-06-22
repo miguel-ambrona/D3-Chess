@@ -31,7 +31,7 @@ namespace {
 // piece pointing to H8, delivering mate. The next function sets the desired
 // square for the moving piece, based on the above details.
 
-inline Square set_target(Position& pos, PieceType movedPiece, Color winner) {
+  inline Square set_target(Position& pos, PieceType movedPiece, Color winner, int unreachable) {
   // We want to go to a dark corner if Winner has a dark-squared bishop
   // or Loser has a light-squared bishop (and Winner doesn't).
 
@@ -51,6 +51,22 @@ inline Square set_target(Position& pos, PieceType movedPiece, Color winner) {
 
   // Correct the rank in case Winner was BLACK (the corner becomes A1 or H1)
   if (winner == BLACK) target = flip_rank(flip_file(target));
+
+  // Flip if the target is unreachable
+  bool flip = false;
+  if (winner == WHITE) {
+    if (darkCorner && (unreachable & 8))
+      flip = true;
+    if (!darkCorner && (unreachable & 4))
+      flip = true;
+  } else {
+    if (darkCorner && (unreachable & 1))
+      flip = true;
+    if (!darkCorner && (unreachable & 2))
+      flip = true;
+  }
+
+  if (flip) target = flip_rank(flip_file(target));
 
   return target;
 }
@@ -125,7 +141,7 @@ enum VariationType { NORMAL, REWARD, PUNISH };
 
 template <DYNAMIC::SearchMode MODE, DYNAMIC::SearchTarget TARGET>
 bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
-               bool pastProgress, bool wasSemiBlocked) {
+               bool pastProgress, bool wasSemiBlocked, int unreachable) {
   Color winner = search.intended_winner();
   Color loser = ~winner;
 
@@ -176,7 +192,7 @@ bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
 
     if (TARGET == DYNAMIC::ANY) {
       PieceType movedPiece = type_of(pos.moved_piece(m));
-      Square target = set_target(pos, movedPiece, winner);
+      Square target = set_target(pos, movedPiece, winner, unreachable);
 
       if (isWinnersTurn) {
         if (pos.advanced_pawn_push(m) || pos.capture(m) ||
@@ -210,7 +226,7 @@ bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
           variation = NORMAL;
 
           if (semiBlocked &&
-              going_to_square(m, unblocking_target, movedPiece, false))
+              going_to_square(m, unblocking_target, movedPiece, unreachable))
             variation = REWARD;
         }
 
@@ -220,7 +236,7 @@ bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
 
       // Not semi-blocked
       else {
-        Square target = set_target(pos, movedPiece, winner);
+        Square target = set_target(pos, movedPiece, winner, false);
         if (going_to_square(m, target, movedPiece, true) &&
             popcount(pos.pieces(loser, BISHOP)) > 1)
           variation = REWARD;
@@ -258,7 +274,7 @@ bool find_mate(Position& pos, DYNAMIC::Search& search, Depth depth,
 
     int checkMate =
         find_mate<MODE, TARGET>(pos, search, newDepth, variation == REWARD,
-                                (semiBlocked || wasSemiBlocked));
+                                (semiBlocked || wasSemiBlocked), unreachable);
 
     search.undo_step();
     pos.undo_move(m);
@@ -310,9 +326,11 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
 
   // Apply a quick search of depth 2 (may be deeper on rewarded variations)
   search.set(2, 5000);
-  mate = find_mate<DYNAMIC::QUICK, DYNAMIC::ANY>(pos, search, 0, false, false);
+  mate = find_mate<DYNAMIC::QUICK, DYNAMIC::ANY>(pos, search, 0, false, false, 0);
 
   if (!search.is_interrupted() && !mate) search.set_unwinnable();
+
+  int unreachable = 0;
 
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
     StateInfo st;
@@ -320,6 +338,8 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
     search.set_flag(DYNAMIC::STATIC);
     if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       search.set_unwinnable();
+
+    unreachable = SemiStatic::get_unreachable(pos, true);
   }
 
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
@@ -333,7 +353,7 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
       uint64_t limit = 10000;
       search.set(maxDepth, limit);
       mate =
-          find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
+        find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false, unreachable);
 
       if (!search.is_interrupted() && !mate) search.set_unwinnable();
 
@@ -376,7 +396,7 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
       // Explore one of those positions that is not statically unwinnable after
       // one move
       bool mate =
-          find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
+        find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false, 0);
       if (!search.is_interrupted() && !mate) search.set_unwinnable();
     }
     return search.get_result();
@@ -442,7 +462,7 @@ DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos,
   for (int depth = initial_depth; depth <= 1000; depth += 2) {
     search.set(depth, search.get_limit());
     mate = find_mate<DYNAMIC::FULL, DYNAMIC::SHORTEST>(pos, search, 0, false,
-                                                       false);
+                                                       false, 0);
 
     if (!search.is_interrupted() && !mate) search.set_unwinnable();
 

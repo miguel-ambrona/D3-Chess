@@ -408,6 +408,33 @@ bool SemiStatic::is_unwinnable(Position& pos, Color intendedWinner) {
   return SYSTEM.is_unwinnable(pos, intendedWinner);
 }
 
+
+
+  int SemiStatic::System::unreachable(Position &pos){
+
+  int unreachable = 0;
+
+  if (!(SemiStatic::System::king_region(pos, WHITE) & square_bb(SQ_A1)))
+      unreachable |= 1;
+
+  if (!(SemiStatic::System::king_region(pos, WHITE) & square_bb(SQ_H1)))
+      unreachable |= 2;
+
+  if (!(SemiStatic::System::king_region(pos, BLACK) & square_bb(SQ_A8)))
+      unreachable |= 4;
+
+  if (!(SemiStatic::System::king_region(pos, BLACK) & square_bb(SQ_H8)))
+      unreachable |= 8;
+
+  return unreachable;
+  }
+
+int SemiStatic::get_unreachable(Position& pos, bool saturated) {
+  if (!saturated)
+    SYSTEM.saturate(pos);
+  return SYSTEM.unreachable(pos);
+}
+
 // Check if the position is unwinnable in all positions at depth 1 ply
 
 bool SemiStatic::is_unwinnable_after_one_move(Position& pos,
