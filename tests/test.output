@@ -2,20 +2,19 @@
 undetermined nodes 10934620 (W- k6B/1b4B1/2b2B2/4B3/3B4/1pB1B3/pP1B4/K7 w - - white)
 undetermined nodes 10914702 (W- 7k/8/8/3B4/8/6p1/1b4Pp/2b4K w - - white)
 undetermined nodes 10879847 (WB 8/p1p1p3/8/4k3/8/6p1/P1P1P1Pp/7K w - - white)
-undetermined nodes 10920912 (WB N1b1N1N1/1pPpPpPp/1P1P1P1P/8/8/8/8/kb2B1K1 w - - white)
 undetermined nodes 10949400 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - white)
 undetermined nodes 10919080 (WB 4k3/8/3pBp2/3PbP2/3pBp2/3PbP2/8/4K3 w - - black)
 
 POSITIONS COUNT:
-     solved: 2794/2800
-   unsolved: 6
+     solved: 2795/2800
+   unsolved: 5
  pre-static: 813
      static: 893
-post-static: 1088
+post-static: 1089
 
 NODES COUNT:
-total nodes: 373864728
-nodes (avg): 133523
+total nodes: 373902064
+nodes (avg): 133536
 nodes (max): 10874880
 
 ---------------- Test Lichess ----------------
@@ -28,6 +27,6 @@ POSITIONS COUNT:
 post-static: 4107
 
 NODES COUNT:
-total nodes: 145620164
+total nodes: 145614733
 nodes (avg): 1110
 nodes (max): 300722
