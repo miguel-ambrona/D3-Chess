@@ -36,7 +36,7 @@ class Search {
   Search() = default;
 
   void init();
-  void set(Depth maxDepth, uint64_t localNodesLimit);
+  void set(Depth maxDepth, Depth initDepth, uint64_t localNodesLimit);
 
   void set_limit(uint64_t nodesLimit);
   void set_winner(Color intendedWinner);
@@ -88,8 +88,9 @@ inline void Search::init() {
   flag = PRE_STATIC;
 }
 
-inline void Search::set(Depth maxDepth, uint64_t localNodesLimit) {
-  depth = 0;
+inline void Search::set(Depth maxDepth, Depth initDepth,
+                        uint64_t localNodesLimit) {
+  depth = initDepth;
   maxSearchDepth = maxDepth;
   mateLen = 0;
   result = UNDETERMINED;

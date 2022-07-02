@@ -14,8 +14,8 @@ POSITIONS COUNT:
 post-static: 1088
 
 NODES COUNT:
-total nodes: 373864728
-nodes (avg): 133523
+total nodes: 374142724
+nodes (avg): 133622
 nodes (max): 10874880
 
 ---------------- Test Lichess ----------------
@@ -28,6 +28,6 @@ POSITIONS COUNT:
 post-static: 4107
 
 NODES COUNT:
-total nodes: 145620164
+total nodes: 145620897
 nodes (avg): 1110
 nodes (max): 300722
