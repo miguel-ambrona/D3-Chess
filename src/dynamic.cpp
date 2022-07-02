@@ -304,20 +304,44 @@ bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
 
 }  // namespace
 
+// Trivial progress: as long as there is only one legal move, make that move
+// (But at most a limited number of times, to avoid infinite loops)
+// FIXME: this function is repeated in util.cpp (and used by semistatic),
+// however, here it takes the additional search argument in order to annotate
+// the movers for displaying the checkmate sequence (if found).
+// We repeate it here to avoid circular dependencies.
+
+Depth trivial_progress(Position& pos, StateInfo& st, DYNAMIC::Search& search,
+                       int repetitions) {
+  Depth d = 0;
+  if (MoveList<LEGAL>(pos).size() == 1 && repetitions > 0)
+    for (const auto& m : MoveList<LEGAL>(pos)) {
+      d++;
+      pos.do_move(m, st);
+      search.annotate_move(m);
+      search.step();
+      search.increase_cnt();
+      d += trivial_progress(pos, st, search, repetitions - 1);
+    }
+  return d;
+}
+
 DYNAMIC::SearchResult full_analysis_aux(Position& pos,
                                         DYNAMIC::Search& search) {
   bool mate;
   search.init();
 
   // Apply a quick search of depth 2 (may be deeper on rewarded variations)
-  search.set(2, 5000);
+  search.set(2, 0, 5000);
   mate = find_mate<DYNAMIC::QUICK, DYNAMIC::ANY>(pos, search, 0, false, false);
 
   if (!search.is_interrupted() && !mate) search.set_unwinnable();
 
+  Depth initDepth = 0;
+
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
     StateInfo st;
-    UTIL::trivial_progress(pos, st, 100);
+    initDepth = trivial_progress(pos, st, search, 100);
     search.set_flag(DYNAMIC::STATIC);
     if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       search.set_unwinnable();
@@ -332,7 +356,7 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
     for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
       // This choice seems empirically good
       uint64_t limit = 10000;
-      search.set(maxDepth, limit);
+      search.set(maxDepth, initDepth, limit);
       mate =
           find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
 
@@ -354,7 +378,7 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
     bool unwinnable = true;
     StateInfo st;
     TT.clear();
-    search.set(10, 10000);
+    search.set(10, 0, 10000);
     for (const auto& m : MoveList<LEGAL>(pos)) {
       pos.do_move(m, st);
       search.annotate_move(m);
@@ -389,7 +413,7 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
 DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos,
                                               DYNAMIC::Search& search) {
   search.init();
-  search.set(0, 0);
+  search.set(0, 0, 0);
 
   StateInfo st;
   UTIL::trivial_progress(pos, st, 100);
@@ -441,7 +465,7 @@ DYNAMIC::SearchResult DYNAMIC::find_shortest(Position& pos,
   int initial_depth = pos.side_to_move() == search.intended_winner() ? 1 : 0;
 
   for (int depth = initial_depth; depth <= 1000; depth += 2) {
-    search.set(depth, search.get_limit());
+    search.set(depth, 0, search.get_limit());
     mate = find_mate<DYNAMIC::FULL, DYNAMIC::SHORTEST>(pos, search, 0, false,
                                                        false);
 
