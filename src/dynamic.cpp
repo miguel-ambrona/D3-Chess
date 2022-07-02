@@ -288,6 +288,7 @@ bool dynamically_unwinnable(Position& pos, Depth depth, Color winner,
     if (type_of(pos.moved_piece(m)) == KING)
       movedKings |= pos.side_to_move() == WHITE ? 2 : 1;
     pos.do_move(m, st);
+    search.annotate_move(m);
     search.step();
     search.increase_cnt();
     bool unwinnable =
