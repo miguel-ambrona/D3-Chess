@@ -18,6 +18,8 @@
 #ifndef CHA_H_INCLUDED
 #define CHA_H_INCLUDED
 
+#include "stockfish.h"
+
 namespace CHA {
 
 void init();
