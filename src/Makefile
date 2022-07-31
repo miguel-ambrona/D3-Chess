@@ -14,7 +14,7 @@
 #  details.
 
 cha:
-	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
+	g++ -o cha util.cpp semistatic.cpp dynamic.cpp cha.cpp main.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
 
 test:
 	g++ -o test util.cpp semistatic.cpp dynamic.cpp test.cpp -lpthread -O3 -I/usr/local/include/stockfish -lstockfish
