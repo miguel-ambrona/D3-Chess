@@ -387,13 +387,14 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
 
       if (!SemiStatic::is_unwinnable(pos, search.intended_winner())) {
         unwinnable = false;
-        break;
       }
 
       search.undo_step();
       pos.undo_move(m);
-    }
 
+      if (!unwinnable)
+        break;
+    }
     if (unwinnable) {
       search.set_unwinnable();
 
