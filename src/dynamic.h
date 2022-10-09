@@ -153,7 +153,7 @@ inline SearchFlag Search::get_flag() const { return flag; }
 
 SearchResult full_analysis(Position&, Search&);
 
-SearchResult quick_analysis(Position&, Search&);
+SearchResult quick_analysis(Position&, Search&, bool stable);
 
 SearchResult find_shortest(Position&, Search&);
 

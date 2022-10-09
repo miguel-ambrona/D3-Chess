@@ -411,13 +411,16 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
   return search.get_result();
 }
 
+// [stable = true] guarantees that [pos] is untouched after the analysis
 DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos,
-                                              DYNAMIC::Search& search) {
+                                              DYNAMIC::Search& search,
+                                              bool stable) {
   search.init();
   search.set(0, 0, 0);
 
   StateInfo st;
-  UTIL::trivial_progress(pos, st, 100);
+  if (!stable)
+    UTIL::trivial_progress(pos, st, 100);
 
   bool unwinnable;
   Bitboard KRQ = pos.pieces(KNIGHT) | pos.pieces(ROOK) | pos.pieces(QUEEN);
@@ -443,7 +446,7 @@ DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos,
     if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
       unwinnable = true;
 
-  if (blockedCandidate && !unwinnable &&
+  if (!stable && blockedCandidate && !unwinnable &&
       (almostOnlyPawnsAndBishops && (pos.checkers() || pos.pieces(KNIGHT))))
     if (SemiStatic::is_unwinnable_after_one_move(pos, search.intended_winner()))
       unwinnable = true;

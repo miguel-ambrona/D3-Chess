@@ -106,7 +106,7 @@ void loop(int argc, char* argv[]) {
       result = DYNAMIC::find_shortest(pos, search);
 
     else if (quickAnalysis)
-      result = DYNAMIC::quick_analysis(pos, search);
+      result = DYNAMIC::quick_analysis(pos, search, false);
 
     else
       result = DYNAMIC::full_analysis(pos, search);

@@ -32,13 +32,12 @@ void CHA::init() {
 
 bool CHA::is_dead(Position& pos) {
   static DYNAMIC::Search search = DYNAMIC::Search();
-  search.set_limit(5000000);
 
   search.set_winner(WHITE);
-  DYNAMIC::SearchResult result = DYNAMIC::quick_analysis(pos, search);
+  DYNAMIC::SearchResult result = DYNAMIC::quick_analysis(pos, search, true);
 
   if (result != DYNAMIC::UNWINNABLE) return false;
 
   search.set_winner(BLACK);
-  return DYNAMIC::UNWINNABLE == DYNAMIC::quick_analysis(pos, search);
+  return DYNAMIC::UNWINNABLE == DYNAMIC::quick_analysis(pos, search, true);
 };
