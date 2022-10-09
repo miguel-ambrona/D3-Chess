@@ -30,6 +30,14 @@ void CHA::init() {
   SemiStatic::init();
 };
 
+bool CHA::is_unwinnable(Position& pos, Color intendedWinner) {
+  static DYNAMIC::Search search = DYNAMIC::Search();
+  search.set_limit(5000000);
+
+  search.set_winner(intendedWinner);
+  return DYNAMIC::UNWINNABLE == DYNAMIC::full_analysis(pos, search);
+};
+
 bool CHA::is_dead(Position& pos) {
   static DYNAMIC::Search search = DYNAMIC::Search();
 

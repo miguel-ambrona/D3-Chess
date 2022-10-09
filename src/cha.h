@@ -22,8 +22,13 @@
 
 namespace CHA {
 
+// To be called once to initializate data structures used by CHA
 void init();
 
+// [is_unwinnable(pos, c)] is [true] if the [pos] is unwinnable for player [c]
+bool is_unwinnable(Position&, Color);
+
+// [is_dead(pos)] is [true] if [pos] is a dead position
 bool is_dead(Position&);
 
 }  // namespace CHA
