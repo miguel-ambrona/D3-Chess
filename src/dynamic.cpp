@@ -326,7 +326,7 @@ Depth trivial_progress(Position& pos, StateInfo& st, DYNAMIC::Search& search,
   return d;
 }
 
-DYNAMIC::SearchResult full_analysis_aux(Position& pos,
+DYNAMIC::SearchResult full_analysis_aux(Position& pos, StateInfo& st,
                                         DYNAMIC::Search& search) {
   bool mate;
   search.init();
@@ -340,7 +340,6 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
   Depth initDepth = 0;
 
   if (search.get_result() == DYNAMIC::UNDETERMINED) {
-    StateInfo st;
     initDepth = trivial_progress(pos, st, search, 100);
     search.set_flag(DYNAMIC::STATIC);
     if (SemiStatic::is_unwinnable(pos, search.intended_winner()))
@@ -373,10 +372,10 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos,
 
 DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
                                              DYNAMIC::Search& search) {
-  DYNAMIC::SearchResult res = full_analysis_aux(pos, search);
+  StateInfo st;
+  DYNAMIC::SearchResult res = full_analysis_aux(pos, st, search);
   if (res == DYNAMIC::UNDETERMINED) {
     bool unwinnable = true;
-    StateInfo st;
     TT.clear();
     search.set(10, 0, 10000);
     for (const auto& m : MoveList<LEGAL>(pos)) {
