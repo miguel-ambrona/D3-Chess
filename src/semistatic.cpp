@@ -288,7 +288,7 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
 }
 
 bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
-  if (UTIL::has_lonely_pawns(pos)) return false;
+  // if (UTIL::has_lonely_pawns(pos)) return false;
 
   Bitboard loserKingRegion = king_region(pos, ~intendedWinner);
   Bitboard visitors =
