@@ -28,12 +28,12 @@ POSITIONS COUNT:
      solved: 3628/3652
    unsolved: 24
  pre-static: 1159
-     static: 1066
-post-static: 1403
+     static: 1115
+post-static: 1354
 
 NODES COUNT:
-total nodes: 480721667
-nodes (avg): 131632
+total nodes: 479216771
+nodes (avg): 131220
 nodes (max): 10914388
 
 ---------------- Test Lichess ----------------
