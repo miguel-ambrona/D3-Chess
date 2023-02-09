@@ -25,15 +25,15 @@ undetermined nodes 10912120 (WB 6k1/p3p1P1/p1p3PB/6P1/8/4P3/PKP5/8 w - - black)
 undetermined nodes 10902744 (WB 1k6/1P1p3p/BP3p2/1P5p/8/8/3P1PKP/8 b - - black)
 
 POSITIONS COUNT:
-     solved: 3628/3652
+     solved: 3580/3604
    unsolved: 24
- pre-static: 1159
-     static: 1115
-post-static: 1354
+ pre-static: 1129
+     static: 1111
+post-static: 1340
 
 NODES COUNT:
-total nodes: 479216771
-nodes (avg): 131220
+total nodes: 479100401
+nodes (avg): 132935
 nodes (max): 10914388
 
 ---------------- Test Lichess ----------------
