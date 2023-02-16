@@ -569,8 +569,19 @@ DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& sea
         return search.get_result();
     }
 
+    // Apply a quick search of depth 2 (may be deeper on rewarded variations)
+    search.set(2, 0, 5000);
+    bool mate = find_mate<DYNAMIC::QUICK, DYNAMIC::ANY>(pos, search, 0, false, false);
+
+    if (!search.is_interrupted() && !mate)
+        search.set_unwinnable();
+
+    if (search.get_result() != DYNAMIC::UNDETERMINED)
+        return search.get_result();
+
     search.set_flag(DYNAMIC::STATIC);
 
+    // Check if the position is semistatically unwinnable
     if (SemiStatic::is_unwinnable(pos, search.intended_winner())) {
         search.set_unwinnable();
         return search.get_result();
