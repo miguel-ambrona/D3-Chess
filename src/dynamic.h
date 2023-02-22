@@ -51,6 +51,7 @@ class Search {
   void undo_step();
   void set_winnable();
   void set_unwinnable();
+  void set_undetermined();
   void set_flag(SearchFlag searchFlag);
   void interrupt();
 
@@ -128,6 +129,8 @@ inline void Search::set_winnable() {
 }
 
 inline void Search::set_unwinnable() { result = UNWINNABLE; }
+
+inline void Search::set_undetermined() { result = UNDETERMINED; }
 
 inline void Search::set_flag(SearchFlag searchFlag) { flag = searchFlag; }
 

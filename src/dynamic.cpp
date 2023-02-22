@@ -370,46 +370,6 @@ DYNAMIC::SearchResult full_analysis_aux(Position& pos, StateInfo& st,
   return search.get_result();
 }
 
-DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos,
-                                             DYNAMIC::Search& search) {
-  StateInfo st;
-  DYNAMIC::SearchResult res = full_analysis_aux(pos, st, search);
-  if (res == DYNAMIC::UNDETERMINED) {
-    bool unwinnable = true;
-    TT.clear();
-    search.set(10, 0, 10000);
-    for (const auto& m : MoveList<LEGAL>(pos)) {
-      pos.do_move(m, st);
-      search.annotate_move(m);
-      search.step();
-      search.increase_cnt();
-
-      if (!SemiStatic::is_unwinnable(pos, search.intended_winner())) {
-        unwinnable = false;
-      }
-
-      search.undo_step();
-      pos.undo_move(m);
-
-      if (!unwinnable)
-        break;
-    }
-    if (unwinnable) {
-      search.set_unwinnable();
-
-    } else {
-      // Explore one of those positions that is not statically unwinnable after
-      // one move
-      bool mate =
-          find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
-      if (!search.is_interrupted() && !mate) search.set_unwinnable();
-    }
-    return search.get_result();
-  }
-
-  return search.get_result();
-}
-
 // [stable = true] guarantees that [pos] is untouched after the analysis
 DYNAMIC::SearchResult DYNAMIC::quick_analysis(Position& pos,
                                               DYNAMIC::Search& search,
@@ -499,4 +459,186 @@ void DYNAMIC::Search::print_result() const {
     std::cout << "undetermined";
 
   std::cout << " nodes " << (totalCounter + counter);
+}
+
+namespace {
+
+    // Check if the position is semistatically unwinnable with recursive trivial progress.
+    bool is_unwinnable_with_trivial_progress(Position& pos, Color intendedWinner) {
+        MoveList<LEGAL> moveList(pos);
+
+        // Checkmate or Stalemate
+        if (moveList.size() == 0)
+            return !pos.checkers() || pos.side_to_move() == intendedWinner;
+
+        // Recursive trivial progress
+        if (moveList.size() == 1)
+        {
+            StateInfo stateInfo;
+            pos.do_move(*moveList.begin(), stateInfo);
+
+            // Returns true if the position is repeated.
+            bool res = stateInfo.repetition || is_unwinnable_with_trivial_progress(pos, intendedWinner);
+
+            pos.undo_move(*moveList.begin());
+            return res;
+        }
+
+        return SemiStatic::is_unwinnable(pos, intendedWinner);
+    }
+
+    bool side_to_move_can_capture_king(const Position& pos) {
+
+        for (const auto& m : MoveList<LEGAL>(pos)) {
+            if (!pos.empty(to_sq(m)) && type_of(pos.piece_on(to_sq(m))) == KING)
+                return true;
+        }
+        return false;
+    }
+
+    // Apply iterative deepening (find_mate may look deeper than maxDepth on
+    // rewarded variations)
+    DYNAMIC::SearchResult iterative_deepening(Position& pos, DYNAMIC::Search& search) {
+        for (int maxDepth = 2; maxDepth <= 1000; maxDepth++) {
+            // This choice seems empirically good
+            uint64_t limit = 10000;
+            search.set(maxDepth, search.actual_depth(), limit);
+            bool mate =
+                find_mate<DYNAMIC::FULL, DYNAMIC::ANY>(pos, search, 0, false, false);
+
+            if (!search.is_interrupted() && !mate)
+                search.set_unwinnable();
+
+            if (search.get_result() != DYNAMIC::UNDETERMINED ||
+                search.is_limit_reached())
+                break;
+        }
+
+        return search.get_result();
+    }
+}
+
+DYNAMIC::SearchResult DYNAMIC::full_analysis(Position& pos, DYNAMIC::Search& search) {
+    search.init();
+    search.set(0, 0, 0);
+
+    if (side_to_move_can_capture_king(pos)) {
+        search.set_unwinnable(); // is it Ok?
+        return search.get_result();
+    }
+
+    // Required to detect repetitions 
+    assert(pos.state()->pliesFromNull == 0);
+
+    std::deque<StateInfo> states;
+
+    // Trivial progress
+    while (true) {
+        MoveList<LEGAL> moveList(pos);
+
+        if (moveList.size() == 1) {
+            states.push_back(StateInfo());
+            pos.do_move(*moveList.begin(), states.back());
+            search.annotate_move(*moveList.begin());
+            search.step();
+
+            // If a position is forced to repeat, then it is unwinnable.
+            if (pos.state()->repetition) {
+                search.set_unwinnable();
+                return search.get_result();
+            }
+        }
+        else
+            break;
+    }
+
+    MoveList<LEGAL> moveList(pos);
+
+    // Checkmate or Stalemate
+    if (moveList.size() == 0) {
+        if (pos.checkers() && pos.side_to_move() == !search.intended_winner())
+            search.set_winnable();
+        else
+            search.set_unwinnable();
+        return search.get_result();
+    }
+
+    // Insufficient material to win
+    if (impossible_to_win(pos, search.intended_winner())) {
+        search.set_unwinnable();
+        return search.get_result();
+    }
+
+    // Apply a quick search of depth 2 (may be deeper on rewarded variations)
+    search.set(2, 0, 5000);
+    bool mate = find_mate<DYNAMIC::QUICK, DYNAMIC::ANY>(pos, search, 0, false, false);
+
+    if (!search.is_interrupted() && !mate)
+        search.set_unwinnable();
+
+    if (search.get_result() != DYNAMIC::UNDETERMINED)
+        return search.get_result();
+
+    search.set_flag(DYNAMIC::STATIC);
+
+    // Check if the position is semistatically unwinnable
+    if (SemiStatic::is_unwinnable(pos, search.intended_winner())) {
+        search.set_unwinnable();
+        return search.get_result();
+    }
+
+    // Check if the position is unwinnable in positions at depth 1 ply
+    std::vector<ExtMove> undefinedBranches;
+
+    for (auto& m : moveList) {
+        StateInfo st;
+        pos.do_move(m, st);
+
+        if (!is_unwinnable_with_trivial_progress(pos, search.intended_winner()))
+            undefinedBranches.push_back(m);
+
+        pos.undo_move(m);
+    }
+
+    if (undefinedBranches.empty()) {
+        search.set_unwinnable();
+        return search.get_result();
+    }
+
+    search.set_flag(DYNAMIC::POST_STATIC);
+
+    if (undefinedBranches.size() != moveList.size()) {
+        TT.clear();
+        int unwinnableCount = 0;
+        for (const auto& m : undefinedBranches) {
+            StateInfo st;
+            pos.do_move(m, st);
+            search.annotate_move(m);
+            search.step();
+            search.increase_cnt();
+
+            if (iterative_deepening(pos, search) == DYNAMIC::UNWINNABLE) {
+                search.set_undetermined();
+                unwinnableCount++;
+            }
+
+            pos.undo_move(m);
+            search.undo_step();
+
+            if (search.is_limit_reached())
+                break;
+
+            if (search.get_result() == DYNAMIC::WINNABLE)
+                return search.get_result();
+        }
+
+        if (unwinnableCount == undefinedBranches.size())
+            search.set_unwinnable();
+    }
+    else {
+        TT.clear();
+        iterative_deepening(pos, search);
+    }
+
+    return search.get_result();
 }
