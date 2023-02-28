@@ -268,6 +268,7 @@ Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
 
 Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
   Bitboard visitors = 0;
+  bool ignorePawns = popcount(king_region(pos, ~c)) > 1;
   for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     Piece pc = pos.piece_on(s);
     PieceType p = type_of(pc);
@@ -275,7 +276,7 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
     if (p == NO_PIECE_TYPE) continue;
 
     // We ignore pawn visitors that are limited in movement (is this sound?)
-    if (p == PAWN && !variables[index(p, c, s, SQ_A1)]) continue;
+    if (p == PAWN && ignorePawns && !variables[index(p, c, s, SQ_A1)]) continue;
 
     Color color = color_of(pc);
 
