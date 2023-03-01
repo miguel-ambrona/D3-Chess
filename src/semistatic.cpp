@@ -266,8 +266,10 @@ Bitboard SemiStatic::System::king_region(Position& pos, Color c) {
 
 // Returns the position of the pieces of color c that can visit the region
 
-Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
+Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c,
+                                      bool expandedPawnRegion) {
   Bitboard visitors = 0;
+  bool ignorePawns = popcount(king_region(pos, ~c)) > 1;
   for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     Piece pc = pos.piece_on(s);
     PieceType p = type_of(pc);
@@ -275,13 +277,29 @@ Bitboard SemiStatic::System::visitors(Position& pos, Bitboard region, Color c) {
     if (p == NO_PIECE_TYPE) continue;
 
     // We ignore pawn visitors that are limited in movement (is this sound?)
-    if (p == PAWN && !variables[index(p, c, s, SQ_A1)]) continue;
+    if (p == PAWN && ignorePawns && !variables[index(p, c, s, SQ_A1)]) continue;
 
     Color color = color_of(pc);
+    Square presquares[8];
 
     for (Square t = SQ_A1; t <= SQ_H8; ++t)
-      if (color == c && (region & t) && variables[index(p, c, s, t)])
-        visitors |= s;
+      if (color == c && (region & t)) {
+        if (variables[index(p, c, s, t)])
+          visitors |= s;
+
+        else if (p == PAWN && expandedPawnRegion && s % 8 != t % 8) {
+          // The squares from which a c-pawn attacks t
+          UTIL::unmove(presquares, p, c, t);
+          for (int j = 0; j < 8; ++j) {
+            if (presquares[j] < 0)
+              break;
+            if (variables[index(p, c, s, presquares[j])]) {
+              visitors |= s;
+              break;
+            }
+          }
+        }
+      }
   }
 
   return visitors;
@@ -292,7 +310,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
 
   Bitboard loserKingRegion = king_region(pos, ~intendedWinner);
   Bitboard visitors =
-      SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner) &
+      SemiStatic::System::visitors(pos, loserKingRegion, intendedWinner, true) &
       ~pos.pieces(intendedWinner, KING);
 
   // std::cout << Bitboards::pretty(loserKingRegion);
@@ -318,7 +336,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
   for (Square s = SQ_A1; s <= SQ_H8; ++s) {
     // Check that at least a visitor can go to s and s is in the mating region
     Bitboard matingBishops =
-        SemiStatic::System::visitors(pos, square_bb(s), intendedWinner) &
+        SemiStatic::System::visitors(pos, square_bb(s), intendedWinner, false) &
         ~pos.pieces(intendedWinner, KING);
 
     if (!matingBishops || !(loserKingRegion & s)) continue;
@@ -336,7 +354,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     // Check if Winner's king can collaborate on the checkmate
     bool activeWinnersKing =
         pos.pieces(intendedWinner, KING) &
-        SemiStatic::System::visitors(pos, UTIL::neighbours(s), intendedWinner);
+        SemiStatic::System::visitors(pos, UTIL::neighbours(s), intendedWinner, false);
 
     // If there are two mating diagonals pointing to s, Winner must have at
     // least two bishops in the region (or their king); otherwise Loser's king
@@ -352,7 +370,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     for (Square e = SQ_A1; e <= SQ_H8; ++e)
       if (escapingSquares & (1ULL << e))
         if (!(~pos.pieces(KING) & SemiStatic::System::visitors(
-                                      pos, square_bb(e), ~intendedWinner))) {
+                 pos, square_bb(e), ~intendedWinner, false))) {
           unblockable = true;
           break;
         }
@@ -362,7 +380,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     if (unblockable & !activeWinnersKing) continue;
 
     Bitboard blockers =
-        SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner);
+        SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner, false);
 
     Bitboard actualBlockers = blockers & ~pos.pieces(KING);
 
@@ -371,7 +389,7 @@ bool SemiStatic::System::is_unwinnable(Position& pos, Color intendedWinner) {
     int blockersCnt = activeWinnersKing ? 1 : 0;
     for (Square blocker = SQ_A1; blocker <= SQ_H8; ++blocker)
       if ((actualBlockers & blocker) &&
-          (SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner)))
+          (SemiStatic::System::visitors(pos, escapingSquares, ~intendedWinner, false)))
         blockersCnt++;
 
     if (popcount(escapingSquares) <= blockersCnt) return false;

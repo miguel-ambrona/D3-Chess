@@ -59,7 +59,8 @@ class System {
   int index(PieceType p, Color c, Square source, Square target) const;
   void saturate(Position& pos);
   Bitboard king_region(Position& pos, Color c);
-  Bitboard visitors(Position& pos, Bitboard region, Color c);
+  Bitboard visitors(Position& pos, Bitboard region, Color c,
+                    bool expandedPawnRegion);
   bool is_unwinnable(Position& pos, Color intendedWinner);
 
  private:
