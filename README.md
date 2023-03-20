@@ -41,14 +41,14 @@ know more about this tool.
 
 We have evaluated CHA over the entire
 [Lichess Open Database](https://database.lichess.org/)
-of standard rated games, which includes 4,107,353,953 games to date (January 2023).
+of standard rated games, which includes 4,205,825,490 games to date (February 2023).
 More concretely, we have applied CHA to the final position of all games that
 ended in a timeout and that were classified as 1-0 or 0-1.
-This represents a total of 1,305,189,272 games (about 32% of all games) which have
-been analyzed in about 124 hours of CPU time (341 μs per position on average).
+This represents a total of 1,336,056,635 games (about 32% of all games) which have
+been analyzed in about 126 hours of CPU time (341 μs per position on average).
 
 Our analysis led to identifying a total of
-[108,254](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[110,485](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their
 opponent could not have checkmated them by any possible sequence of legal moves.
@@ -63,18 +63,18 @@ Despite not being complete, our quick algorithm (since CHA v2.5.2) can correctly
 identify all unfairly classified games from the Lichess Open Database.
 
 Below, we present a comparison of the performance of the two versions of CHA
-when analyzing all the non-drawn timeouts from January 2023 (32,722,328 positions).
+when analyzing all the non-drawn timeouts from February 2023 (30,867,363 positions).
 The experiments were performed on a personal laptop
 1.80GHz Intel-Core i7-10510U CPU, running Ubuntu 20.04 LTS.
 
 |                                 |    Full CHA   |    Quick CHA   |
 |--------------------------------:|:-------------:|:--------------:|
-|   Average #positions per second |      4200     |    200,000+    |
-|       Average time per position |     234 μs    |     4.55 μs    |
-|              Standard deviation |     392 μs    |     7.48 μs    |
-|       Maximum time per position |     394 ms    |      432 μs    |
-| Unwinnable positions identified |  2503 (100%)  |  2503 (100%)   |
-|            Total execution time |   2 h 08 min  |   2 min 29 s   |
+|   Average #positions per second |      3200     |    200,000+    |
+|       Average time per position |     307 μs    |     4.60 μs    |
+|              Standard deviation |     645 μs    |     7.73 μs    |
+|       Maximum time per position |     338 ms    |     2.20 ms    |
+| Unwinnable positions identified |  2231 (100%)  |  2231 (100%)   |
+|            Total execution time |   2 h 38 min  |   2 min 22 s   |
 
 
 ## Installation & Usage
