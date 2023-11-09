@@ -41,14 +41,12 @@ know more about this tool.
 
 We have evaluated CHA over the entire
 [Lichess Open Database](https://database.lichess.org/)
-of standard rated games, which includes 4,519,926,692 games to date (May 2023).
+of standard rated games, which includes 5 billion games to date (October 2023).
 More concretely, we have applied CHA to the final position of all games that
 ended in a timeout and that were classified as 1-0 or 0-1.
-This represents a total of 1,435,191,846 games (about 32% of all games) which have
-been analyzed in about 135 hours of CPU time (339 μs per position on average).
 
 Our analysis led to identifying a total of
-[117,876](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[129546](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their
 opponent could not have checkmated them by any possible sequence of legal moves.
@@ -63,7 +61,7 @@ Despite not being complete, our quick algorithm (since CHA v2.5.2) can correctly
 identify all unfairly classified games from the Lichess Open Database.
 
 Below, we present a comparison of the performance of the two versions of CHA
-when analyzing all the non-drawn timeouts from May 2023 (33,078,367 positions).
+when analyzing all the non-drawn timeouts of over 30 million games form Lichess.
 The experiments were performed on a personal laptop
 1.80GHz Intel-Core i7-10510U CPU, running Ubuntu 20.04 LTS.
 
