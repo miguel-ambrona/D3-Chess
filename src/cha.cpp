@@ -42,10 +42,10 @@ bool CHA::is_dead(Position& pos) {
   static DYNAMIC::Search search = DYNAMIC::Search();
 
   search.set_winner(WHITE);
-  DYNAMIC::SearchResult result = DYNAMIC::quick_analysis(pos, search, true);
+  DYNAMIC::SearchResult result = DYNAMIC::full_analysis(pos, search);
 
   if (result != DYNAMIC::UNWINNABLE) return false;
 
   search.set_winner(BLACK);
-  return DYNAMIC::UNWINNABLE == DYNAMIC::quick_analysis(pos, search, true);
+  return DYNAMIC::UNWINNABLE == DYNAMIC::full_analysis(pos, search);
 };
