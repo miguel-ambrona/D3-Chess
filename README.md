@@ -41,12 +41,12 @@ know more about this tool.
 
 We have evaluated CHA over the entire
 [Lichess Open Database](https://database.lichess.org/)
-of standard rated games, which includes more than 6.8 billion games to date (June 2025).
+of standard rated games, which includes more than 7.3 billion games to date (Nov 2025).
 More concretely, we have applied CHA to the final position of all games that
 ended in a timeout and that were classified as 1-0 or 0-1.
 
 Our analysis led to identifying a total of
-[174139](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
+[184936](https://raw.githubusercontent.com/miguel-ambrona/D3-Chess/main/tests/unfair.txt)
 games that were unfairly classified.
 Namely, games that were lost by the player who ran out of time, but their
 opponent could not have checkmated them by any possible sequence of legal moves.
